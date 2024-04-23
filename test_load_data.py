@@ -11,4 +11,7 @@ from load_data import load_eeg_data
 
 #%% Load the data
 
-data_dictionary = load_eeg_data(subject='k3b')
+# Possible subject labels: 'l1b', 'k6b', or 'k3b'
+subject_label = 'k3b'
+
+data_dictionary = load_eeg_data(subject=subject_label)

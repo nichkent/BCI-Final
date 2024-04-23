@@ -10,13 +10,6 @@ import numpy as np
 from matplotlib import pyplot as plt
 import loadmat
 
-# Select subject data
-# Please change to one of the following: l1b, k6b, or k3b
-subject_label = "k3b"
-
-# Find the file path
-data_file = f"data/{subject_label}.mat"
-
 #%% Load the data
 
 """
@@ -37,7 +30,6 @@ def load_eeg_data(subject):
     
     # Extract relevant fields from the data file
     signal = data['s'] # EEG signal data array with potential NaN values indicating breaks or data saturation
-    
     fs = data['HDR']['SampleRate'] # Sampling rate
     class_label = data['HDR']['Classlabel'] # Labels of each class (left hand=1, right hand=2, foot=3, tongue=4) and NAN (trials of the test set)
     trigger_time = data['HDR']['TRIG'] # Start time of each trial
