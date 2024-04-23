@@ -1,6 +1,6 @@
 # README for 4-class data for BCI competition 2005; compiled by A. Schloegl
 
-Writen 4/23/24 by Aiden Pricer-Coan, Arthur Dolimier, and Claire Leahy, Nicholas Kent
+Writen 4/23/24 by Arthur Dolimier, Nicholas Kent, Claire Leahy, and Aiden Pricer-Coan
 
 # Overview:
 This dataset is part of the BCI Competition 2005 and involves EEG data for analyzing motor imagery. It includes EEG recordings from three participants who imagined movements of four body parts: the tongue, left hand, right hand, and feet. Each participant completed at least six runs containing 40 trials each. The data aims to facilitate the development and benchmarking of algorithms that can predict a user's intent based on EEG signals.
@@ -24,11 +24,11 @@ data = loadmat.loadmat(data_file)
 The suggested method for formatting the data is as follows. The format that the data comes in is a bit non-intuitive. The data comes loaded into a dictionary. Within this dictionary is another dictionary titled HDR, from the HDR dictionary you can extract the fields as such:
 
 ```python
-s = data['s'] # EEG signal data array with potential NaN values indicating breaks or data saturation.
+signal = data['s'] # EEG signal data array with potential NaN values indicating breaks or data saturation.
 
-fs = data['HDR']['SampleRate'] # Sample rate
-class_label = data['HDR']['Classlabel'] # Labels of each class (i.e. tongue, left hand, right hand, feet) and NAN which indicates the trials of the test set
-trig = data['HDR']['TRIG'] # Start time of each trial
+fs = data['HDR']['SampleRate'] # Sampling rate
+class_label = data['HDR']['Classlabel'] # Labels of each class (left hand=1, right hand=2, foot=3, tongue=4) and NAN (trials of the test set)
+trigger_time = data['HDR']['TRIG'] # Start time of each trial
 artifact_selection = data['HDR']['ArtifactSelection'] # Indicates trials with artifacts which were visually identified
 ```
 
@@ -37,8 +37,8 @@ The data appears to have many fields that are not relevant to the EGG data. As s
     - 's': 1D array, EEG signal data array with potential NaN values indicating break or data saturation.
     - 'SampleRate': 1D array of sample rates listed for each trial. Always 250 Hz/second.
     - 'Classlabel': 1D array, numeric labels (1-4) indicating the movement class for each trial; NaN values denote test set trials.
-    - TRIG: 1D array, start time for each trial.
-    - ArtifactSelection: 1D array, indicates trials with artifacts which were visually identified.
+    - 'TRIG': 1D array, start time for each trial.
+    - 'ArtifactSelection': 1D array, indicates trials with artifacts which were visually identified.
 
 # Evaluation:
 Participants are expected to output continuous classification results for all four classes throughout each trial. A confusion matrix in the original study was built for each time-point between 0.0 s and 7.0 s, using which the accuracy and kappa coefficient are derived.
