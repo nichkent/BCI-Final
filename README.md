@@ -34,11 +34,11 @@ artifact_selection = data['HDR']['ArtifactSelection'] # Indicates trials with ar
 
 # Data Structure:
 The data appears to have many fields that are not relevant to the EGG data. As such the following fields are the only ones relevant to our research:
-    - 's': 1D array, EEG signal data array with potential NaN values indicating break or data saturation.
-    - 'SampleRate': 1D array of sample rates listed for each trial. Always 250 Hz/second.
-    - 'Classlabel': 1D array, numeric labels (1-4) indicating the movement class for each trial; NaN values denote test set trials.
-    - 'TRIG': 1D array, start time for each trial.
-    - 'ArtifactSelection': 1D array, indicates trials with artifacts which were visually identified.
+- 's': 1D array, EEG signal data array with potential NaN values indicating break or data saturation.
+- 'SampleRate': 1D array of sample rates listed for each trial. Always 250 Hz/second.
+- 'Classlabel': 1D array, numeric labels (1-4) indicating the movement class for each trial; NaN values denote test set trials.
+- 'TRIG': 1D array, start time for each trial.
+- 'ArtifactSelection': 1D array, indicates trials with artifacts which were visually identified.
 
 # Evaluation:
 Participants are expected to output continuous classification results for all four classes throughout each trial. A confusion matrix in the original study was built for each time-point between 0.0 s and 7.0 s, using which the accuracy and kappa coefficient are derived.
