@@ -34,7 +34,7 @@ artifact_selection = data['HDR']['ArtifactSelection'] # Indicates trials with ar
 
 # Data Structure:
 The data appears to have many fields that are not relevant to the EGG data. As such the following fields are the only ones relevant to our research:
-- 's': 1D array, EEG signal data array with potential NaN values indicating break or data saturation.
+- 's': 2D array (time points x channels), EEG signal data array with potential NaN values indicating break or data saturation.
 - 'SampleRate': 1D array of sample rates listed for each trial. Always 250 Hz/second.
 - 'Classlabel': 1D array, numeric labels (1-4) indicating the movement class for each trial; NaN values denote test set trials.
 - 'TRIG': 1D array, start time for each trial.
