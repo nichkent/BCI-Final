@@ -18,10 +18,16 @@ data_dictionary = load_eeg_data(subject=subject_label)
 #%% Plot the raw data
 
 # Extract the relevant data from the dictionary
-raw_data = data_dictionary['Signal'] # Raw EEG signal
-fs = data_dictionary['Sampling Frequency'] # The sampling frequency
-class_labels = data_dictionary['Class Label'] # All the class labels
-class_label = 1 # Change to be a number 1-4
+raw_data = data_dictionary['Signal']  # Raw EEG signal
+fs = data_dictionary['Sampling Frequency']  # The sampling frequency
+class_labels = data_dictionary['Class Label']  # All the class labels
+trigger_time = data_dictionary['Start Times']  # Start time of each trial
+class_label = 1  # Change to be a number 1-4
 
 # Call to plot_raw_data with your choice of class
 plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
+
+# Epoch EEG data
+eeg_epochs = epoch_data(fs, trigger_time, raw_data)
+
+# plot_epoch_data(eeg_epochs, fs)
