@@ -24,8 +24,9 @@ def epoch_data(fs, trigger_time, eeg_data, epoch_start_time=2, epoch_end_time=7)
         epoch_start_time: (int) - start time offset from start point of each epoch, default when stimulus occurs
         epoch_end_time: (int) - end time offset from start point of each epoch, default when stimulus ends
 
-    Returns: eeg_epochs: np.array (float) - 3d array of size num trials x samples per epoch x num channels,
-    epoch for each event in the EEG data
+    Returns: 
+        eeg_epochs: np.array (float) - 3d array of size num trials x samples per epoch x num channels,
+        epoch for each event in the EEG data
     """
     # Calculate the number of samples in a single epoch
     samples_per_epoch = round(fs * (epoch_end_time - epoch_start_time))
