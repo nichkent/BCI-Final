@@ -77,5 +77,5 @@ def plot_epoch_data(epoch_data, fs):
         plt.legend()
         plt.grid(True)
         plt.show()
-
 '''
+

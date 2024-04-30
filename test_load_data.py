@@ -31,13 +31,6 @@ class_label = 1  # Change to be a number 1-4
 # Call to plot_raw_data with your choice of class
 plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 
-#%% Epoch the data
-
-# Epoch EEG data
-eeg_epochs = epoch_data(fs, trigger_time, raw_data)
-
-# plot_epoch_data(eeg_epochs, fs)
-
 #%% Filter the data
 
 # Make the filter
@@ -49,4 +42,18 @@ raw_data_replaced = remove_nan_values(raw_data)
 filtered_data = filter_data(raw_data_replaced, b=filter_coefficients)
 envelope = get_envelope(filtered_data)
 
-# Bootstrap the envelope
+#%% Epoch the data
+
+# Epoch raw EEG data
+eeg_epochs = epoch_data(fs, trigger_time, raw_data)
+# plot_epoch_data(eeg_epochs, fs)
+
+# Epoch filtered data
+filtered_data_epochs = epoch_data(fs, trigger_time, filtered_data.T) # Filtering changed shape of data, so use transpose for shape (samples, channels)
+
+# Epoch the envelope
+envelope_epochs = epoch_data(fs, trigger_time, envelope.T) # Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
+
+#%% Bootstrap for significance
+
+
