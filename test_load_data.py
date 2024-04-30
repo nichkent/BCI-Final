@@ -10,7 +10,7 @@ Created on Tue Apr 23 18:48:11 2024
 from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data
 from plot_epoch_data import epoch_data
-from clean_data import make_finite_filter, filter_data, get_envelope
+from clean_data import make_finite_filter, filter_epochs, get_epoch_envelopes
 
 #%% Load the data
 
@@ -46,9 +46,9 @@ filter_coefficients = make_finite_filter(low_cutoff=0.1, high_cutoff=8, filter_t
 
 '''Placeholder channels until ready to run all, gives user option to select a few'''
 # Filter the epochs
-filtered_epochs = filter_data(eeg_epochs, b=filter_coefficients, channels=[0,1,2])
+filtered_epochs = filter_epochs(eeg_epochs, b=filter_coefficients, channels=[0,1,2])
 
 # Get the envelope of the data
-envelope = get_envelope(filtered_epochs)
+envelope = get_epoch_envelopes(filtered_epochs)
 
 # Bootstrap the envelope

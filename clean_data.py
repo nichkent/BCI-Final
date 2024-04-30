@@ -63,7 +63,7 @@ Epochs or all raw data? Could easily be applied to all and then run the epochs o
 Take in a if infinite filter chosen
 """
 
-def filter_data(eeg_epochs, b, channels):
+def filter_epochs(eeg_epochs, b, channels):
     
     # Reshape for better access of data
     reshaped_eeg_epochs = np.transpose(eeg_epochs, (2,0,1))
@@ -92,7 +92,7 @@ How useful would the envelope be?
 Is this what we want to bootstrap, identify significance for classification?
 """
 
-def get_envelope(filtered_data):
+def get_epoch_envelopes(filtered_data):
     
     # Variables of epoch data for sizing
     channel_count = filtered_data.shape[0] # Won't be all channels
