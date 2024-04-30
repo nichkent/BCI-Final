@@ -114,6 +114,30 @@ def get_epoch_envelopes(filtered_data):
 #%% 
 '''FOR ALL DATA'''
 
+def remove_nan_values(raw_data):
+    
+    # Copy raw_data to alter later
+    raw_data_replaced = raw_data
+    
+    # Find where the raw data is NaN (data saturation, breaks)
+    raw_data_nan = np.isnan(raw_data) # Shape (samples x channels)
+    
+    # Find the sample and channel where the raw data is NaN
+    is_nan = np.where(raw_data_nan == True)
+    nan_sample = is_nan[0] # Contains the samples with NaN
+    nan_channel = is_nan[1] # Contains the channel where above sample is NaN
+    
+    # Find number of samples that need to be replaced
+    samples_to_remove_count = len(nan_sample)
+    
+    # Replace NaN data with 0
+    for replace_index in range(samples_to_remove_count):
+        
+        raw_data_replaced[nan_sample[replace_index]][nan_channel[replace_index]] = 0
+    
+    return raw_data_replaced
+    
+
 def filter_data(data, b):
     
     # variables for sizing
@@ -131,6 +155,8 @@ def filter_data(data, b):
     return filtered_data
 
 def get_envelope(filtered_data):
+    
+    # Convert filtered data to remove nan values
     
     # variables for sizing
     channel_count = len(filtered_data) # 1st dimension is number of channels
