@@ -130,7 +130,7 @@ def filter_data(data, b):
     
     return filtered_data
 
-def get_envelope(data, filtered_data):
+def get_envelope(filtered_data):
     
     # variables for sizing
     channel_count = len(filtered_data) # 1st dimension is number of channels
