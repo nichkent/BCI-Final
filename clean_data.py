@@ -45,10 +45,12 @@ Is bandpass the best type of filter for this case?
 Could make more general, decide on finite or infinite. Select parameters from there
 """
   
-def make_bandpass_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
+def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
+    
+    # get Nyquist frequency to use in filter
+    nyquist_frequency = fs/2
     
     # get filter coefficients
-    nyquist_frequency = fs/2 # get Nyquist frequency to use in filter
     filter_coefficients = firwin(filter_order+1, [low_cutoff/nyquist_frequency, high_cutoff/nyquist_frequency], window=filter_type, pass_zero='bandpass')
     
     return filter_coefficients
@@ -61,24 +63,27 @@ Epochs or all raw data? Could easily be applied to all and then run the epochs o
 Take in a if infinite filter chosen
 """
 
-def filter_data(data, b):
+def filter_data(eeg_epochs, b, channels):
     
-    # extract data from the dictionary
-    eeg = data['eeg']*(10**6) # convert to microvolts
+    # Reshape for better access of data
+    reshaped_eeg_epochs = np.transpose(eeg_epochs, (2,0,1))
     
-    # variables for sizing
-    channel_count = len(eeg) # 1st dimension of EEG is number of channels
-    sample_count = len(eeg.T) # 2nd dimension of EEG is number of samples
+    # Variables of epoch data for sizing
+    channel_count = len(channels) # Won't be all channels, only inputs
+    epoch_count = reshaped_eeg_epochs.shape[1]
+    sample_count = reshaped_eeg_epochs.shape[2]
     
-    # preallocate array
-    filtered_data = np.zeros([channel_count, sample_count])
+    # Preallocate array
+    filtered_epochs = np.zeros((channel_count, epoch_count, sample_count))
     
-    # apply filter to EEG data for each channel
-    for channel_index in range(channel_count):
+    # Apply filter to all samples for each channel of each epoch
+    for channel in channels:
         
-        filtered_data[channel_index,:] = filtfilt(b=b, a=1, x=eeg[channel_index,:])
-    
-    return filtered_data
+        for epoch_index in range(epoch_count):
+            
+            filtered_epochs[channel, epoch_index] = filtfilt(b=b, a=1, x=reshaped_eeg_epochs[channel, epoch_index, :])
+        
+    return filtered_epochs
 
 #%% Generate the envelope
 
@@ -89,16 +94,19 @@ Is this what we want to bootstrap, identify significance for classification?
 
 def get_envelope(filtered_data):
     
-    # variables for sizing
-    channel_count = len(filtered_data) # 1st dimension is number of channels
-    sample_count = len(filtered_data.T) # 2nd dimension is number of samples
+    # Variables of epoch data for sizing
+    channel_count = filtered_data.shape[0] # Won't be all channels
+    epoch_count = filtered_data.shape[1]
+    sample_count = filtered_data.shape[2]
     
-    # preallocate the array
-    envelope = np.zeros([channel_count, sample_count])
+    # Preallocate the array
+    envelope = np.zeros([channel_count, epoch_count, sample_count])
     
-    # get the envelope for each channel
+    # Get the envelope for each epoch of each channel
     for channel_index in range(channel_count):
         
-        envelope[channel_index]=np.abs(hilbert(x=filtered_data[channel_index]))
+        for epoch_index in range(epoch_count):
+        
+            envelope[channel_index, epoch_index]=np.abs(hilbert(x=filtered_data[channel_index, epoch_index]))
 
     return envelope
