@@ -110,3 +110,38 @@ def get_epoch_envelopes(filtered_data):
             envelope[channel_index, epoch_index]=np.abs(hilbert(x=filtered_data[channel_index, epoch_index]))
 
     return envelope
+
+#%% 
+'''FOR ALL DATA'''
+
+def filter_data(data, b):
+    
+    # variables for sizing
+    sample_count = data.shape[0] # 1st dimension of EEG is number of samples
+    channel_count = data.shape[1] # 2nd dimension of EEG is number of channels
+    
+    # preallocate array
+    filtered_data = np.zeros([channel_count, sample_count])
+    
+    # apply filter to EEG data for each channel
+    for channel_index in range(channel_count):
+        
+        filtered_data[channel_index,:] = filtfilt(b=b, a=1, x=data.T[channel_index,:]) # Transpose of data is shape (channel_count, sample_count)
+    
+    return filtered_data
+
+def get_envelope(data, filtered_data):
+    
+    # variables for sizing
+    channel_count = len(filtered_data) # 1st dimension is number of channels
+    sample_count = len(filtered_data.T) # 2nd dimension is number of samples
+    
+    # preallocate the array
+    envelope = np.zeros([channel_count, sample_count])
+    
+    # get the envelope for each channel
+    for channel_index in range(channel_count):
+        
+        envelope[channel_index]=np.abs(hilbert(x=filtered_data[channel_index]))
+
+    return envelope  
