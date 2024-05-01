@@ -38,23 +38,6 @@ Should ICA be performed on those trials (basically assuming electrodes=component
 Is best way of approaching artifact removal looking at accuracy with and without artifact trials? Don't have a mixing matrix
 """
 
-#%% Make filter  
-
-"""
-Is bandpass the best type of filter for this case?
-Could make more general, decide on finite or infinite. Select parameters from there
-"""
-  
-def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
-    
-    # Get Nyquist frequency to use in filter
-    nyquist_frequency = fs/2
-    
-    # Get filter coefficients
-    filter_coefficients = firwin(filter_order+1, [low_cutoff/nyquist_frequency, high_cutoff/nyquist_frequency], window=filter_type, pass_zero='bandpass')
-    
-    return filter_coefficients
-
 #%% Remove NaN values from raw data
 
 def remove_nan_values(raw_data):
@@ -85,6 +68,54 @@ def remove_nan_values(raw_data):
         raw_data_replaced[nan_sample[replace_index]][nan_channel[replace_index]] = medians[nan_channel[replace_index]]
     
     return raw_data_replaced
+
+#%% Separate clean epochs from epochs with artifacts
+
+def separate_artifact_trials(epoched_data, is_artifact_trial):
+    
+    # Convert artifact_trials to list for counting
+    is_artifact_trial = list(is_artifact_trial)
+    
+    # Create empty lists to contain the "clean" and "artifact" epochs
+    clean_epochs = []
+    artifact_epochs = []
+    
+    # Get epoch count for indexing
+    epoch_count = epoched_data.shape[0]
+    
+    # Separate clean and artifact epochs
+    for epoch_index in range(epoch_count):
+        
+        # Updated clean_epochs if there isn't an artifact
+        if is_artifact_trial[epoch_index] == 0:
+            clean_epochs.append(epoched_data[epoch_index])
+         
+        # Update artifact_epochs if there is an artifact
+        elif is_artifact_trial[epoch_index] == 1:
+            artifact_epochs.append(epoched_data[epoch_index])
+            
+    # Convert to arrays
+    clean_epochs = np.array(clean_epochs)
+    artifact_epochs = np.array(artifact_epochs)
+    
+    return clean_epochs, artifact_epochs
+
+#%% Make filter  
+
+"""
+Is bandpass the best type of filter for this case?
+Could make more general, decide on finite or infinite. Select parameters from there
+"""
+  
+def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
+    
+    # Get Nyquist frequency to use in filter
+    nyquist_frequency = fs/2
+    
+    # Get filter coefficients
+    filter_coefficients = firwin(filter_order+1, [low_cutoff/nyquist_frequency, high_cutoff/nyquist_frequency], window=filter_type, pass_zero='bandpass')
+    
+    return filter_coefficients
 
 #%% Filter data
 
