@@ -1,5 +1,5 @@
 """
-This script provides a function for creating epoched eeg data.
+This script provides a function for epoching eeg data.
 
 @author: Aiden Pricer-Coan
 
