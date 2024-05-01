@@ -62,6 +62,12 @@ def remove_nan_values(raw_data):
     # Copy raw_data to alter later
     raw_data_replaced = raw_data
     
+    # Find the median of the raw data (ignoring NaN values)
+    channel_count = raw_data.shape[1] # Get the number of channels
+    medians = np.zeros(channel_count) # Create empty array to store medians
+    for channel_index in range(channel_count): # For each channel
+        medians[channel_index] = np.nanmedian(raw_data.T[channel_index]) # Update the array with the median
+    
     # Find where the raw data is NaN (data saturation, breaks)
     raw_data_nan = np.isnan(raw_data)
     
@@ -73,10 +79,10 @@ def remove_nan_values(raw_data):
     # Find number of samples that need to be replaced
     samples_to_remove_count = len(nan_sample)
     
-    # Replace NaN data with 0
+    # Replace NaN data with median of the channel
     for replace_index in range(samples_to_remove_count):
         
-        raw_data_replaced[nan_sample[replace_index]][nan_channel[replace_index]] = 0
+        raw_data_replaced[nan_sample[replace_index]][nan_channel[replace_index]] = medians[nan_channel[replace_index]]
     
     return raw_data_replaced
 
