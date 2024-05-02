@@ -14,60 +14,84 @@ from matplotlib import pyplot as plt
 #%% Get the frequency spectrum of the data
 
 def get_frequency_spectrum(eeg_epochs, fs):
-    """
-    Description
-    -----------
-    Function that takes the Fourier Transform of the epoched EEG data and provides the corresponding frequencies.
-
-    Parameters
-    ----------
-    eeg_epochs : array of floats, size ExCxS, where E is the number of epochs, C is the number of channels, and S is the number of samples within the epoch
-        Array containing the EEG data in volts from each of the electrode channels organized by periods of time in which an event (12Hz or 15Hz flashes) occurs.
-    fs : array of float, size 1
-        The sampling frequency of the data obtained in the 'fs' key of data_dict.
-
-    Returns
-    -------
-    eeg_epochs_fft : array of complex numbers, size ExCx((fs/2)+1), where E is the number of epochs, C is the number of channels, and fs is the sampling frequency
-        The EEG data converted to the frequency space for each epoch and channel.
-    fft_frequencies : array of floats, size (fs/2)+1, where fs is the sampling frequency
-        Array containing sample frequencies.
-
-    """
-  
+    
+    # Reshape the epoched data so samples occupy last axis
+    reshaped_eeg_epochs = eeg_epochs.transpose(0,2,1) # Shape (epochs, channels, samples) 
+    
     # take the Fourier Transform of the epoched EEG data
-    eeg_epochs_fft = np.fft.rfft(eeg_epochs)
+    eeg_epochs_fft = np.fft.rfft(reshaped_eeg_epochs)
     
     # find the corresponding frequencies from the epoched EEG data
-    fft_frequencies = np.fft.rfftfreq(n=eeg_epochs.shape[-1], d=1/fs) # n is the number of samples in the signal (final dimension) in eeg_epochs), d is the inverse of sampling frequency
+    fft_frequencies = np.fft.rfftfreq(n=reshaped_eeg_epochs.shape[-1], d=1/fs) # n is the number of samples in the signal (final dimension) in eeg_epochs), d is the inverse of sampling frequency
   
     return eeg_epochs_fft, fft_frequencies
 
 #%% Get the power spectra
 
-def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, class_labels):
+def get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels):
     
-    # calculate power spectra
-    # isolate frequency spectra by event type (12Hz or 15Hz)
-    event_high_frequency = eeg_epochs_fft[is_trial_15Hz,:,:]
-    event_low_frequency = eeg_epochs_fft[~is_trial_15Hz,:,:]
+    # Sort class labels (take first index of tuple)
+    class1 = np.where(class_labels==1)[0]
+    class2 = np.where(class_labels==2)[0]
+    class3 = np.where(class_labels==3)[0]
+    class4 = np.where(class_labels==4)[0]
+    test_class = np.where(np.isnan(class_labels))[0] # NaN assigned to test data
     
-    # calculate power for event type
-    event_high_frequency_power = (np.abs(event_high_frequency))**2
-    event_low_frequency_power = (np.abs(event_low_frequency))**2 
+    # Calculate power spectra
+    # Take FFT by class label
+    class1_frequency = eeg_epochs_fft[class1,:,:]
+    class2_frequency = eeg_epochs_fft[class2,:,:]
+    class3_frequency = eeg_epochs_fft[class3,:,:]
+    class4_frequency = eeg_epochs_fft[class4,:,:]
+    test_class_frequency = eeg_epochs_fft[test_class,:,:]
     
-    # calculate mean power for event type
-    event_high_frequency_power_mean = event_high_frequency_power.mean(0)
-    event_low_frequency_power_mean = event_low_frequency_power.mean(0)
+    # Calculate power for class
+    class1_power = (np.abs(class1_frequency))**2
+    class2_power = (np.abs(class2_frequency))**2
+    class3_power = (np.abs(class3_frequency))**2
+    class4_power = (np.abs(class4_frequency))**2
+    test_class_power = (np.abs(test_class_frequency))**2
     
-    # find maximum power by channel
-    event_high_frequency_normalization_factor = event_high_frequency_power_mean.max(1)
-    event_low_frequency_normalization_factor = event_low_frequency_power_mean.max(1)
+    # Calculate mean power for class
+    class1_power_mean = class1_power.mean(0)
+    class2_power_mean = class2_power.mean(0)
+    class3_power_mean = class3_power.mean(0)
+    class4_power_mean = class4_power.mean(0)
+    test_class_power_mean = test_class_power.mean(0)
     
-    # calculate normalized power for event type
-    # preallocate arrays    
-    normalized_event_high_frequency_power_mean = np.zeros(event_high_frequency_power_mean.shape)
-    normalized_event_low_frequency_power_mean = np.zeros(event_low_frequency_power_mean.shape)
+    # Find maximum power by channel
+    class1_normalization_factor = class1_power_mean.max(1)
+    class2_normalization_factor = class2_power_mean.max(1)
+    class3_normalization_factor = class3_power_mean.max(1)
+    class4_normalization_factor = class4_power_mean.max(1)
+    test_class_normalization_factor = test_class_power_mean.max(1)
+    
+    # Calculate normalized power for event type
+    # Preallocate arrays    
+    normalized_class1_power_mean = np.zeros(class1_power_mean.shape)
+    normalized_class2_power_mean = np.zeros(class2_power_mean.shape)
+    normalized_class3_power_mean = np.zeros(class3_power_mean.shape)
+    normalized_class4_power_mean = np.zeros(class4_power_mean.shape)
+    normalized_test_class_power_mean = np.zeros(test_class_power_mean.shape)
+    
+    # Normalize to max (all in a channel) - uses the given input if not None
+    channel_count = eeg_epochs_fft.shape[1] # Second index is number of channels
+    for channel_index in range(channel_count):
+        
+        normalized_class1_power_mean[channel_index,:] = class1_power_mean[channel_index,:]/class1_normalization_factor[channel_index]
+        normalized_class2_power_mean[channel_index,:] = class2_power_mean[channel_index,:]/class2_normalization_factor[channel_index]
+        normalized_class3_power_mean[channel_index,:] = class3_power_mean[channel_index,:]/class3_normalization_factor[channel_index]
+        normalized_class4_power_mean[channel_index,:] = class4_power_mean[channel_index,:]/class4_normalization_factor[channel_index]
+        normalized_test_class_power_mean[channel_index,:] = test_class_power_mean[channel_index,:]/test_class_normalization_factor[channel_index]
+    
+    # Calculate spectra for event type
+    spectrum_db_class1 = 10*(np.log10(normalized_class1_power_mean))
+    spectrum_db_class2 = 10*(np.log10(normalized_class2_power_mean))
+    spectrum_db_class3 = 10*(np.log10(normalized_class3_power_mean))
+    spectrum_db_class4 = 10*(np.log10(normalized_class4_power_mean))
+    spectrum_db_test_class = 10*(np.log10(normalized_test_class_power_mean))
+    
+    return spectrum_db_class1, spectrum_db_class2, spectrum_db_class3, spectrum_db_class4, spectrum_db_test_class
 
 #%% Plot the power spectra
 
