@@ -74,7 +74,12 @@ eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 spectra_by_class = get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels)
 
 # Plot the power spectra
-plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 24], subject='l1b')
+plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 34], subject='l1b')
+
+# For filtered data
+filtered_epochs_fft, filtered_fft_frequencies = get_frequency_spectrum(filtered_data_epochs, fs)
+filtered_spectra_by_class = get_power_spectra(filtered_epochs_fft, filtered_fft_frequencies, class_labels)
+plot_power_spectrum(filtered_epochs_fft, filtered_fft_frequencies, filtered_spectra_by_class, channels=[28, 31, 34], subject='l1b')
 
 #%% Bootstrap for significance
 
