@@ -146,7 +146,7 @@ def extract_epochs(data, start_times, duration):
     return np.array([data[max(0, start): start + duration] for start in start_times])
 
 
-def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label):
+def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label, class_labels=[], channels=[]):
     """
     Plot ERPs with confidence intervals and significance markers.
 
@@ -160,6 +160,8 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
         - rest_epochs <np.array>: The ERP data for all epochs in the rest condition.
         - corrected_p_values <np.array>: Array of p-values corrected for multiple comparisons.
         - subject_label <str>: Identifier for the subject being plotted.
+        - class_labels <list>: Optional input with which labels will be evaluated. The default is an empty list.
+        - channels <list>: Optional input for the electrodes the user wishes to evaluate. The default is an empty list.
 
     Effects:
         - Generates a plot with ERPs, confidence intervals, and significance markers, displayed with appropriate labels and legends.
@@ -197,3 +199,6 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
 
     # Display the plot
     plt.show()
+    
+    # Save the figure
+    plt.savefigure(f'Subject_{subject_label}_CI_Plot.png')
