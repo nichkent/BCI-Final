@@ -77,10 +77,13 @@ def separate_test_and_train_data(class_labels, trigger_times):
     is_test = np.isnan(class_labels)
     
     # Get the start times for test and train sets (as lists)
-    test_trigger_times = list(trigger_times[is_test])
-    train_trigger_times = list(trigger_times[~is_test])
+    test_trigger_times = trigger_times[is_test]
+    train_trigger_times = trigger_times[~is_test]
     
-    return test_trigger_times, train_trigger_times
+    # Get the class labels of the training data
+    training_class_labels = class_labels[~is_test]
+    
+    return test_trigger_times, train_trigger_times, training_class_labels
     
 
 #%% Separate clean epochs from epochs with artifacts

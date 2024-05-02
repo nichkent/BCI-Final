@@ -35,7 +35,7 @@ plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 
 #%% Separate test and train data
 
-test_trigger_times, train_trigger_times = separate_test_and_train_data(class_labels, trigger_times)
+test_trigger_times, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 
 #%% Filter the data
 
