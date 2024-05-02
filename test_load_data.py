@@ -12,6 +12,7 @@ from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, plot_confidence_intervals_with_significance
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, make_finite_filter, filter_data, get_envelope
+from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra, plot_power_spectrum
 
 #%% Load the data
 
@@ -63,6 +64,17 @@ envelope_epochs = epoch_data(fs, trigger_times, envelope.T) # Filtering changed 
 #%% Separate clean and artifact epochs
 
 clean_epochs, artifact_epochs = separate_artifact_trials(envelope_epochs, is_artifact_trial)
+
+#%% Frequency spectra of the data
+
+# Take the FFT of the epochs
+eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
+
+# Get the power spectra of each class
+spectra_by_class = get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels)
+
+# Plot the power spectra
+plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 24], subject='l1b')
 
 #%% Bootstrap for significance
 

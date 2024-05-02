@@ -91,54 +91,37 @@ def get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels):
     spectrum_db_class4 = 10*(np.log10(normalized_class4_power_mean))
     spectrum_db_test_class = 10*(np.log10(normalized_test_class_power_mean))
     
-    return spectrum_db_class1, spectrum_db_class2, spectrum_db_class3, spectrum_db_class4, spectrum_db_test_class
+    # Create a list to return spectra together
+    spectra_by_class = [spectrum_db_class1, spectrum_db_class2, spectrum_db_class3, spectrum_db_class4, spectrum_db_test_class]
+    
+    return spectra_by_class
 
 #%% Plot the power spectra
 
-def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, is_trial_15Hz, channels, channels_to_plot, subject, is_plotting=True):
-    # normalize to max (all in a channel) - uses the given input if not None
-    for channel_index in range(len(channels)):
-        
-        normalized_event_high_frequency_power_mean[channel_index,:] = event_high_frequency_power_mean[channel_index,:]/event_high_frequency_normalization_factor[channel_index]
-        normalized_event_low_frequency_power_mean[channel_index,:] = event_low_frequency_power_mean[channel_index,:]/event_low_frequency_normalization_factor[channel_index]
+def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels, subject):
     
-    # calculate spectra for event type
-    spectrum_db_15Hz = 10*(np.log10(normalized_event_high_frequency_power_mean))
-    spectrum_db_12Hz = 10*(np.log10(normalized_event_low_frequency_power_mean))
+    # Set up figure
+    figure, channel_plot = plt.subplots(len(channels), sharex=True, figsize=(10,6))
     
-    # plotting
-    if is_plotting == True:
+    for plot_index, channel in enumerate(channels): # plot_index to access a subplot
         
-        # isolate channel being plotted
-        channel_to_plot = [channels.index(channel_name) for channel_name in channels_to_plot]
+        for class_spectrum in spectra_by_class:
         
-        # set up figure
-        figure, channel_plot = plt.subplots(len(channels_to_plot), sharex=True)
+            # Plot the power spectra by class
+            channel_plot[plot_index].plot(fft_frequencies, class_spectrum[channel,:])
         
-        for plot_index, channel in enumerate(channel_to_plot): # plot_index to access a subplot
-            
-            # plot the power spectra by event type
-            channel_plot[plot_index].plot(fft_frequencies, spectrum_db_12Hz[channel,:], color='red')
-            channel_plot[plot_index].plot(fft_frequencies, spectrum_db_15Hz[channel,:], color='green')
-            
-            # formatting subplot
-            channel_plot[plot_index].set_xlim(0,80)
-            channel_plot[plot_index].set_xlabel('frequency (Hz)')
-            channel_plot[plot_index].tick_params(labelbottom=True) # shows axis values for each subplot when sharex=True, adapted from Stack Overflow (function and keywords)
-            channel_plot[plot_index].set_ylabel('power (dB)')
-            channel_plot[plot_index].set_title(f'Channel {channels_to_plot[plot_index]}')
-            channel_plot[plot_index].legend(['12Hz','15Hz'], loc='best')
-            channel_plot[plot_index].grid()
-            
-            # plot dotted lines at 12Hz and 15Hz
-            channel_plot[plot_index].axvline(12, color='red', linestyle='dotted')
-            channel_plot[plot_index].axvline(15, color='green', linestyle='dotted')
-        
-        # format overall plot
-        figure.suptitle(f'SSVEP Subject S{subject} Frequency Content')
-        figure.tight_layout()
-        
-        # save image
-        plt.savefig(f'SSVEP_S{subject}_frequency_content.png')
-        
-    return spectrum_db_15Hz, spectrum_db_12Hz 
+        # Formatting subplot
+        channel_plot[plot_index].set_xlim(0,35)
+        channel_plot[plot_index].set_xlabel('frequency (Hz)')
+        channel_plot[plot_index].tick_params(labelbottom=True)
+        channel_plot[plot_index].set_ylabel('power (dB)')
+        channel_plot[plot_index].set_title(f'Channel {channel}')
+        channel_plot[plot_index].grid()
+    
+    # Format overall plot
+    figure.suptitle(f'MI Subject S{subject} Frequency Content')
+    figure.legend(['Class 1','Class 2', 'Class 3', 'Class 4', 'Test'])
+    figure.tight_layout()
+    
+    # save image
+    plt.savefig(f'MI_S{subject}_frequency_content.png')
