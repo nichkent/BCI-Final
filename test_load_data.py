@@ -30,9 +30,6 @@ trigger_time = data_dictionary['Start Times']  # Start time of each trial
 is_artifact_trial = data_dictionary['Artifact Trials'] # Truth data of artifact in each trial
 class_label = 1  # Change to be a number 1-4
 
-print(class_labels)
-exit()
-
 # Call to plot_raw_data with your choice of class
 plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 
