@@ -89,7 +89,7 @@ p_values = bootstrap_p_values(target_epochs, rest_epochs)
 _, corrected_p_values = fdr_correction(p_values, alpha=0.05)
 
 # Plot ERPs with confidence intervals and significance markings
-plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label)
+plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label, class_labels, class_label=1, channels=[0,1,2,3])
 
 # Next Steps:
 # Create Topo maps of the subjects

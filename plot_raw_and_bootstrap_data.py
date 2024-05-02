@@ -212,4 +212,4 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
     plt.show()
     
     # Save the figure
-    plt.savefigure(f'Subject_{subject_label}_CI_Plot.png')
+    plt.savefig(f'Subject_{subject_label}_CI_Plot.png')
