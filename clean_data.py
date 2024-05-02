@@ -69,6 +69,20 @@ def remove_nan_values(raw_data):
     
     return raw_data_replaced
 
+#%% Remove test set trials
+
+def separate_test_and_train_data(class_labels, trigger_times):
+    
+    # Get epoch indices where data is test data
+    is_test = np.isnan(class_labels)
+    
+    # Get the start times for test and train sets (as lists)
+    test_trigger_times = list(trigger_times[is_test])
+    train_trigger_times = list(trigger_times[~is_test])
+    
+    return test_trigger_times, train_trigger_times
+    
+
 #%% Separate clean epochs from epochs with artifacts
 
 def separate_artifact_trials(epoched_data, is_artifact_trial):
