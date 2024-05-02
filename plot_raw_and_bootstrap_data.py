@@ -146,7 +146,7 @@ def extract_epochs(data, start_times, duration):
     return np.array([data[max(0, start): start + duration] for start in start_times])
 
 
-def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label, class_labels=[], channels=[]):
+def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label, class_labels, class_label=None, channels=None):
     """
     Plot ERPs with confidence intervals and significance markers.
 
@@ -160,8 +160,9 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
         - rest_epochs <np.array>: The ERP data for all epochs in the rest condition.
         - corrected_p_values <np.array>: Array of p-values corrected for multiple comparisons.
         - subject_label <str>: Identifier for the subject being plotted.
-        - class_labels <list>: Optional input with which labels will be evaluated. The default is an empty list.
-        - channels <list>: Optional input for the electrodes the user wishes to evaluate. The default is an empty list.
+        - class_labels <np.array>: Array containing the class labels of the data.
+        - class_label <int>: Optional input with which class will be evaluated. The default is None.
+        - channels <list>: Optional input for the electrodes the user wishes to evaluate. The default is None.
 
     Effects:
         - Generates a plot with ERPs, confidence intervals, and significance markers, displayed with appropriate labels and legends.
@@ -169,6 +170,16 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
     Returns:
         - None
     """
+    
+    # Update to evaluate one class label
+    if class_label != None:
+        target_class = np.where(class_labels == class_label)[0] # Take the first index of the tuple
+        target_epochs = target_epochs[target_class] # Update with one class label
+    
+    # Update to evaluate specific channels
+    if channels != None:
+        target_epochs = target_epochs[:,:,channels] # Take all data across the given channnels
+    
     # Calculate the standard error of the mean for the target ERP across epochs
     target_se_mean = np.std(target_epochs, axis=0) / np.sqrt(target_epochs.shape[0])
     # Calculate the standard error of the mean for the rest ERP across epochs
