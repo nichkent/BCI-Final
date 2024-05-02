@@ -7,8 +7,9 @@ Created on Tue Apr 23 18:48:11 2024
 """
 
 #%% Import packages
+import numpy as np
 from load_data import load_eeg_data
-from plot_raw_and_bootstrap_data import plot_raw_data
+from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, plot_confidence_intervals_with_significance
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_artifact_trials, make_finite_filter, filter_data, get_envelope
 
@@ -60,5 +61,36 @@ envelope_epochs = epoch_data(fs, trigger_time, envelope.T) # Filtering changed s
 clean_epochs, artifact_epochs = separate_artifact_trials(envelope_epochs, is_artifact_trial)
 
 #%% Bootstrap for significance
+
+epoch_duration = 4 * fs  # Duration of each task epoch, e.g., 4 seconds
+
+fs = data_dictionary['Sampling Frequency']
+trigger_times = data_dictionary['Start Times']
+
+# Extract rest periods as non-target data
+# Assuming rest periods are the 2 seconds before each trigger
+rest_start_times = trigger_times - 2 * fs
+
+# Extract task and rest epochs
+target_epochs = extract_epochs(raw_data, trigger_times, epoch_duration)
+rest_epochs = extract_epochs(raw_data, rest_start_times, epoch_duration)
+
+# Assuming target_epochs and rest_epochs are defined
+# Calculate ERPs
+target_erp = np.mean(target_epochs, axis=(0, 2))  # Average across epochs and channels
+rest_erp = np.mean(rest_epochs, axis=(0, 2))  # Average across epochs and channels
+ # Adjust based on the length of the target or rest ERP data
+erp_times = np.linspace(0, epoch_duration, num=target_epochs.shape[1])
+
+# Calculate p-values using bootstrap
+p_values = bootstrap_p_values(target_epochs, rest_epochs)
+
+# Adjust p-values for multiple comparisons
+_, corrected_p_values = fdr_correction(p_values, alpha=0.05)
+
+# Plot ERPs with confidence intervals and significance markings
+plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label)
+
+
 
 

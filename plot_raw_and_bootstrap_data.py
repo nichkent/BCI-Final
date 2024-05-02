@@ -57,128 +57,143 @@ def plot_raw_data(raw_data, fs, subject_label, class_label, class_labels):
     plt.show()
 
 #%% Bootsrap the data
-def calculate_se_mean(epochs):
+
+# Imports
+from statsmodels.stats.multitest import fdrcorrection
+
+def bootstrap_p_values(target_data, non_target_data, iterations=1000, ci=95):
     """
-        Calculate Standard Error of the Mean (SEM) for given data.
-    
-        Parameters:
-         - epochs <np.array>[NUM_EPOCHS, SAMPLES_PER_EPOCH, NUM_CHANNELS]: 3d array representing an epoch for each event in our data.
-             ~ epochs[i][j][k], where i represents the i(th) epoch, 
-                                     j represents the j(th) sample in the epoch,
-                                     k represents the k(th) channel of data in the epoch.
-        Returns:
-        - se_mean <np.array>[] : SEM values for each time point across trials.
-    """    
-    # Use numpy to calculate standard deviation for each time point
-    std = np.std(epochs, axis=0)
-    
-    # Number of trials
-    n = epochs.shape[0]
-    
-    # Calculate the standard error of the mean for confidence intervals
-    se_mean = std / np.sqrt(n)
-    
-    # Return standard error of the epochs
-    return se_mean
+    Calculate the bootstrap p-values by resampling combined target and non-target data.
 
-def plot_confidence_intervals(target_erp, nontarget_erp, erp_times, target_epochs, nontarget_epochs):
+    This function combines target and non-target data, then resamples this combined dataset to create a distribution of mean differences under the null hypothesis. It calculates the observed mean difference, performs bootstrap resampling to estimate the distribution of mean differences, and computes a p-value based on this distribution.
+
+    Parameters:
+        - target_data <np.array>: Array of data from the target condition.
+        - non_target_data <np.array>: Array of data from the non-target condition.
+        - iterations <int>: Number of bootstrap iterations to perform (default 1000).
+        - ci <int>: Confidence interval percentage to compute (default 95).
+
+    Returns:
+        - observed_diff <float>: The observed difference in means between target and non-target data.
+        - p_value <float>: The p-value estimating the probability of observing a difference as extreme as the observed, under the null hypothesis.
+        - lower_bound <float>: Lower bound of the confidence interval for the mean difference.
+        - upper_bound <float>: Upper bound of the confidence interval for the mean difference.
     """
-        Plots the ERPs on each channel for target and nontarget events.
-        Plots confidence intervals as error bars around these ERPs.
-        Shows error range for the ERPs.
-         
-        Params:
-         - target_erp <np.array>[SAMPLES_PER_EPOCH, NUM_CHANNELS] : ERPs for target events
-         - nontarget_erp <np.array>[SAMPLES_PER_EPOCH, NUM_CHANNELS] : ERPs for non-target events
-         - erp_times <np.ndarray>[SAMPLES_PER_EPOCH] : time points relative to flashing onset.
-         - target_epochs <numpy.ndarray>[NUM_TARGET_EPOCHS, SAMPLES_PER_EPOCH, NUM_CHANNELS] : List of epochs where target letter is included in row/column.
-         - nontarget_epochs: <numpy.ndarray>[NUM_NONTARGET_EPOCHS, SAMPLES_PER_EPOCH, NUM_CHANNELS] : List of epochs where target letter is NOT included in row/column.
-             
-        Returns:
-         - None
-    """    
-    # Calculate se_mean for both target and nontarget ERPs
-    target_se_mean = calculate_se_mean(target_epochs)
-    nontarget_se_mean = calculate_se_mean(nontarget_epochs)
+    # Combine target and non-target data into a single array for resampling
+    combined_data = np.concatenate((target_data, non_target_data))
     
-    # Determine the number of channels from the shape of the data
-    num_channels = target_erp.shape[1]
+    # Calculate the observed difference in means between the target and non-target data
+    observed_diff = np.mean(target_data) - np.mean(non_target_data)
     
-    # Define the layout of the subplots. Adusts the number of rows based on the number of channels
-    cols = 3
-    rows = num_channels // cols + (num_channels % cols > 0)
-    
-    plt.figure(figsize=(10, rows * 3))
-    
-    # Iterates through all channels
-    for channel_index in range(num_channels):
-        # Create a subplot of all the channels for the current subject
-        plt.subplot(rows, cols, channel_index + 1)
-        
-        # Pulls target_erp, nontarget_erp, target_se_mean, and nontarget_se_mean for each channel
-        target_erp_channel = target_erp[:, channel_index]
-        nontarget_erp_channel = nontarget_erp[:, channel_index]
-        target_se_mean_channel = target_se_mean[:, channel_index]
-        nontarget_se_mean_channel = nontarget_se_mean[:, channel_index]
-        
-        # Plot target/nontarget ERPs for the current channel
-        plt.plot(erp_times, target_erp_channel, label='Target ERP')        
-        plt.plot(erp_times, nontarget_erp_channel, label='Non-Target ERP')
-        
-        # Fill in 95% confidence interval by adding/subtracting 2*SEM to/from mean ERP.
-        plt.fill_between(erp_times, target_erp_channel - 2 * target_se_mean_channel, target_erp_channel + 2 * target_se_mean_channel, alpha=0.2, label='Target +/- 95% CI')
-        plt.fill_between(erp_times, nontarget_erp_channel - 2 * nontarget_se_mean_channel, nontarget_erp_channel + 2 * nontarget_se_mean_channel, alpha=0.2, label='Non-Target +/- 95% CI')
-        
-        plt.xlabel('Time (ms)') # X axis label
-        plt.ylabel('Amplitude (µV)') # Y axis label
-        plt.title(f'Channel {channel_index}') # Title
-        
-        if (channel_index == num_channels - 1):
-            plt.legend()
-    
-    # Show plot in a tight layout
-    plt.tight_layout()
-    #plt.show()
+    # Initialize an empty list to store differences from each bootstrap iteration
+    bootstrap_diffs = []
 
+    # Perform bootstrap resampling
+    for _ in range(iterations):
+        # Shuffle the combined data to break any existing order
+        np.random.shuffle(combined_data)
+        # Split the shuffled data back into 'target' and 'non-target' groups
+        boot_target = combined_data[:len(target_data)]
+        boot_non_target = combined_data[len(target_data):]
+        # Calculate the difference in means for this bootstrap sample
+        boot_diff = np.mean(boot_target) - np.mean(boot_non_target)
+        # Append the result to the list of bootstrap differences
+        bootstrap_diffs.append(boot_diff)
 
-def bootstrap_p_values(target_epochs, nontarget_epochs, num_iterations=3000):
+    # Calculate the lower and upper bounds of the specified confidence interval
+    lower_bound = np.percentile(bootstrap_diffs, (100 - ci) / 2)
+    upper_bound = np.percentile(bootstrap_diffs, 100 - (100 - ci) / 2)
+    # Calculate the p-value as the proportion of bootstrap differences at least as extreme as the observed difference
+    p_value = np.sum(np.abs(bootstrap_diffs) >= np.abs(observed_diff)) / iterations
+
+    # Return the observed difference, p-value, and confidence interval bounds
+    return observed_diff, p_value, lower_bound, upper_bound
+
+def fdr_correction(p_values, alpha=0.05):
     """
-        Calculate p-values for each time point and channel using bootstrapping.
-    
-        Parameters:
-         - target_epochs <numpy.ndarray>[NUM_TARGET_EPOCHS, SAMPLES_PER_EPOCH, NUM_CHANNELS] : List of epochs where target letter is included in row/column.
-         - nontarget_epochs: <numpy.ndarray>[NUM_NONTARGET_EPOCHS, SAMPLES_PER_EPOCH, NUM_CHANNELS] : List of epochs where target letter is NOT included in row/column.
-         - num_iterations <int> : number of bootstrapping iterations
-    
-        Returns:
-         - p_values: np.array, shape (SAMPLES_PER_EPOCH, NUM_CHANNELS), p-values for each time point and channel
+    Apply False Discovery Rate (FDR) correction to p-values.
+
+    Args:
+     - p_values <np.array>: Array of p-values to correct
+     - alpha <float>: Significance level (default is 0.05)
+
+    Returns:
+     - rejected <np.array>: Boolean array indicating which hypotheses are rejected
+     - corrected_p_values <np.array>: Array of corrected p-values
     """
-    # Combine target and non-target epochs for resampling under the null hypothesis
-    combined_epochs = np.concatenate((target_epochs, nontarget_epochs), axis=0)
+    # Perform the FDR correction using the fdrcorrection function from the statsmodels library
+    rejected, corrected_p_values = fdrcorrection(p_values, alpha=alpha)
     
-    # Difference between target and non-target means, for later use
-    observed_diff = np.mean(target_epochs, axis=0) - np.mean(nontarget_epochs, axis=0)
+    # Return the results: an array indicating which hypotheses are rejected and the corrected p-values
+    return rejected, corrected_p_values
     
-    # Initialize an array to hold the bootstrap differences
-    bootstrap_diffs = np.zeros((num_iterations, observed_diff.shape[0], observed_diff.shape[1]))
-    
-    # Total number of epochs for resampling
-    num_epochs = combined_epochs.shape[0]
-    
-    for i in range(num_iterations):
-        # Sample with replacement from the combined set of epochs
-        bootstrap_epoch_indices = np.random.randint(0, num_epochs, size=num_epochs)
-        # Create bootstrap samples for target and non-target
-        bootstrap_sample = combined_epochs[bootstrap_epoch_indices]
-        bootstrap_target_sample = bootstrap_sample[:len(target_epochs)]
-        bootstrap_nontarget_sample = bootstrap_sample[len(target_epochs):]
+# Function to extract epochs
+def extract_epochs(data, start_times, duration):
+    """
+    Extract epochs from the continuous data starting at specified times with a given duration.
 
-        # Calculate the difference between the means of the bootstrap samples
-        bootstrap_diff = np.mean(bootstrap_target_sample, axis=0) - np.mean(bootstrap_nontarget_sample, axis=0)
-        bootstrap_diffs[i] = bootstrap_diff
-    
-    # Calculate proportion of bootstrap differences at least as extreme as the observed difference
-    p_values = np.sum(np.abs(bootstrap_diffs) >= np.abs(observed_diff), axis=0) / num_iterations
-    
-    return p_values
+    This function slices the continuous data array to extract segments (epochs) starting from each specified start time and continuing for the specified duration.
 
+    Parameters:
+        - data <np.array>: The continuous data from which to extract epochs.
+        - start_times <np.array>: An array of start times (in samples) for each epoch.
+        - duration <int>: The duration (in samples) of each epoch.
+
+    Returns:
+        - epochs <np.array>: A 2D array where each row represents an epoch extracted from the continuous data.
+    """
+    # Create an array of epochs by slicing the continuous data at each start time for the specified duration
+    return np.array([data[max(0, start): start + duration] for start in start_times])
+
+
+def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label):
+    """
+    Plot ERPs with confidence intervals and significance markers.
+
+    This function plots event-related potentials (ERPs) for target and rest conditions with confidence intervals. It also marks significant differences based on corrected p-values.
+
+    Parameters:
+        - target_erp <np.array>: The average ERP for the target condition.
+        - rest_erp <np.array>: The average ERP for the rest condition.
+        - erp_times <np.array>: Array of time points corresponding to the ERP data.
+        - target_epochs <np.array>: The ERP data for all epochs in the target condition.
+        - rest_epochs <np.array>: The ERP data for all epochs in the rest condition.
+        - corrected_p_values <np.array>: Array of p-values corrected for multiple comparisons.
+        - subject_label <str>: Identifier for the subject being plotted.
+
+    Effects:
+        - Generates a plot with ERPs, confidence intervals, and significance markers, displayed with appropriate labels and legends.
+
+    Returns:
+        - None
+    """
+    # Calculate the standard error of the mean for the target ERP across epochs
+    target_se_mean = np.std(target_epochs, axis=0) / np.sqrt(target_epochs.shape[0])
+    # Calculate the standard error of the mean for the rest ERP across epochs
+    rest_se_mean = np.std(rest_epochs, axis=0) / np.sqrt(rest_epochs.shape[0])
+
+    # If there are multiple channels, average the standard errors across channels
+    if target_epochs.shape[2] > 1:  # Check if there are multiple channels
+        target_se_mean = np.mean(target_se_mean, axis=1)
+        rest_se_mean = np.mean(rest_se_mean, axis=1)
+
+    # Set up the plot
+    plt.figure(figsize=(10, 5))
+    # Plot the target ERP with a label
+    plt.plot(erp_times, target_erp, label='Target ERP')
+    # Plot the rest ERP with a label
+    plt.plot(erp_times, rest_erp, label='Rest ERP')
+    # Add confidence intervals for the target ERP
+    plt.fill_between(erp_times, target_erp - 2 * target_se_mean, target_erp + 2 * target_se_mean, alpha=0.2, label='Target +/- 95% CI')
+    # Add confidence intervals for the rest ERP
+    plt.fill_between(erp_times, rest_erp - 2 * rest_se_mean, rest_erp + 2 * rest_se_mean, alpha=0.2, label='Rest +/- 95% CI')
+
+    # Add plot labels and legend
+    plt.xlabel('Time (ms)')
+    plt.ylabel('Amplitude (µV)')
+    plt.title(f'Subject {subject_label} ERP Significance')
+    plt.legend()
+    plt.grid(True)
+
+    # Display the plot
+    plt.show()
