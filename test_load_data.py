@@ -30,6 +30,9 @@ trigger_time = data_dictionary['Start Times']  # Start time of each trial
 is_artifact_trial = data_dictionary['Artifact Trials'] # Truth data of artifact in each trial
 class_label = 1  # Change to be a number 1-4
 
+print(class_labels)
+exit()
+
 # Call to plot_raw_data with your choice of class
 plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 
@@ -91,6 +94,6 @@ _, corrected_p_values = fdr_correction(p_values, alpha=0.05)
 # Plot ERPs with confidence intervals and significance markings
 plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label)
 
-
-
-
+# Next Steps:
+# Create Topo maps of the subjects
+# Create error matrix from all trials for each time-point 0.0 s ≤ t ≤ 7.0 s .
