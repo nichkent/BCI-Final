@@ -192,12 +192,16 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
 
     # Set up the plot
     plt.figure(figsize=(10, 5))
+    
     # Plot the target ERP with a label
     plt.plot(erp_times, target_erp, label='Target ERP')
+    
     # Plot the rest ERP with a label
     plt.plot(erp_times, rest_erp, label='Rest ERP')
+    
     # Add confidence intervals for the target ERP
     plt.fill_between(erp_times, target_erp - 2 * target_se_mean, target_erp + 2 * target_se_mean, alpha=0.2, label='Target +/- 95% CI')
+    
     # Add confidence intervals for the rest ERP
     plt.fill_between(erp_times, rest_erp - 2 * rest_se_mean, rest_erp + 2 * rest_se_mean, alpha=0.2, label='Rest +/- 95% CI')
 
