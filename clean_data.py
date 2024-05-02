@@ -85,7 +85,6 @@ def separate_test_and_train_data(class_labels, trigger_times):
     
     return test_trigger_times, train_trigger_times, training_class_labels
     
-
 #%% Separate clean epochs from epochs with artifacts
 
 def separate_artifact_trials(epoched_data, is_artifact_trial):
