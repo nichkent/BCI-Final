@@ -36,9 +36,11 @@ plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 
 #%% Separate test and train data
 
+# Separate train and test start times
 test_trigger_times, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 
-class1_triggers, class2_triggers, class3_triggers, class4_triggers, test_class_triggers = separate_by_class(class_labels, trigger_times)
+# Separate start time by class
+separated_trigger_times = separate_by_class(class_labels, trigger_times)
 
 #%% Filter the data
 
@@ -102,7 +104,7 @@ rest_epochs = extract_epochs(raw_data, rest_start_times, epoch_duration)
 # Calculate ERPs
 target_erp = np.mean(target_epochs, axis=(0, 2))  # Average across epochs and channels
 rest_erp = np.mean(rest_epochs, axis=(0, 2))  # Average across epochs and channels
- # Adjust based on the length of the target or rest ERP data
+# Adjust based on the length of the target or rest ERP data
 erp_times = np.linspace(0, epoch_duration, num=target_epochs.shape[1])
 
 # Calculate p-values using bootstrap
@@ -114,6 +116,46 @@ _, corrected_p_values = fdr_correction(p_values, alpha=0.05)
 # Plot ERPs with confidence intervals and significance markings
 plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, target_epochs, rest_epochs, corrected_p_values, subject_label, class_labels, class_label=1, channels=[0,1,2,3])
 
+#%% Plot by class (fifth class contains test data)
+epoch_duration=1750
+
+# Get epochs by class
+class_epochs = []
+for class_start_times in separated_trigger_times:
+    class_epochs.append(extract_epochs(raw_data, class_start_times, epoch_duration))
+
+# Get ERPs by class
+class_erps = []
+for class_epoch in class_epochs:
+    class_erps.append(np.mean(class_epoch, axis=(0,2)))
+erp_times_classes = np.linspace(0, epoch_duration, num=int(epoch_duration))
+
+# P-values between classes
+p_values_classes = []
+for class_to_compare_index1 in range(4): # Only use 4 classes, 5th is test data
+    for class_to_compare_index2 in range(4): # Only use 4 classes, 5th is test data
+        # Calculate p-value between different classes (only do one time each)
+        if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
+            p_values_classes.append(bootstrap_p_values(class_epochs[class_to_compare_index1], class_epochs[class_to_compare_index2]))
+
+# Corrected p-values between classes
+corrected_p_values_classes = []
+for p_value in p_values_classes:
+    _, corrected_p_values = fdr_correction(p_value, alpha=0.05)
+    corrected_p_values_classes.append(corrected_p_values)
+
+# Plot the classes
+# NOTE: As function is written, comparison 1 is "target" and comparison 2 is "rest"
+comparison_number = 0
+for class_to_compare_index1 in range(4): # Only use 4 classes, 5th is test data
+    for class_to_compare_index2 in range(4): # Only use 4 classes, 5th is test data
+        if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
+            
+            plot_confidence_intervals_with_significance(class_erps[class_to_compare_index1], class_erps[class_to_compare_index2], erp_times_classes, class_epochs[class_to_compare_index1], class_epochs[class_to_compare_index2], corrected_p_values_classes[comparison_number], subject_label, class_labels)
+            
+            comparison_number += 1
+
+#%%
 # Next Steps:
 # Create Topo maps of the subjects
 # Create error matrix from all trials for each time-point 0.0 s ≤ t ≤ 7.0 s .

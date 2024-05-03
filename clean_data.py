@@ -134,7 +134,9 @@ def separate_by_class(class_labels, trigger_times):
     class4_triggers = trigger_times[class4]
     test_class_triggers = trigger_times[test_class]
     
-    return class1_triggers, class2_triggers, class3_triggers, class4_triggers, test_class_triggers
+    separated_trigger_times = [class1_triggers, class2_triggers, class3_triggers, class4_triggers, test_class_triggers]
+    
+    return separated_trigger_times
 
 #%% Make filter  
 
