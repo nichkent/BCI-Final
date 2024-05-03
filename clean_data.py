@@ -116,6 +116,26 @@ def separate_artifact_trials(epoched_data, is_artifact_trial):
     
     return clean_epochs, artifact_epochs
 
+#%% Separate start times by class
+
+def separate_by_class(class_labels, trigger_times):
+    
+    # Sort class labels
+    class1 = np.where(class_labels==1)
+    class2 = np.where(class_labels==2)
+    class3 = np.where(class_labels==3)
+    class4 = np.where(class_labels==4)
+    test_class = np.where(np.isnan(class_labels)) # NaN assigned to test data
+    
+    # Get the start times that correspond to the class
+    class1_triggers = trigger_times[class1]
+    class2_triggers = trigger_times[class2]
+    class3_triggers = trigger_times[class3]
+    class4_triggers = trigger_times[class4]
+    test_class_triggers = trigger_times[test_class]
+    
+    return class1_triggers, class2_triggers, class3_triggers, class4_triggers, test_class_triggers
+
 #%% Make filter  
 
 """

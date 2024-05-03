@@ -11,7 +11,7 @@ import numpy as np
 from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, plot_confidence_intervals_with_significance
 from plot_epoch_data import epoch_data
-from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, make_finite_filter, filter_data, get_envelope
+from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, separate_by_class, make_finite_filter, filter_data, get_envelope
 from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra, plot_power_spectrum
 
 #%% Load the data
@@ -37,6 +37,8 @@ plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 #%% Separate test and train data
 
 test_trigger_times, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
+
+class1_triggers, class2_triggers, class3_triggers, class4_triggers, test_class_triggers = separate_by_class(class_labels, trigger_times)
 
 #%% Filter the data
 
