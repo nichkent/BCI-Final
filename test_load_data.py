@@ -13,6 +13,8 @@ from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extra
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, separate_by_class, make_finite_filter, filter_data, get_envelope
 from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra, plot_power_spectrum
+from plot_results import average_around_electrodes_epoched
+from plot_topo import plot_topo
 
 #%% Load the data
 
@@ -60,14 +62,25 @@ eeg_epochs = epoch_data(fs, trigger_times, raw_data)
 # plot_epoch_data(eeg_epochs, fs)
 
 # Epoch filtered data
-filtered_data_epochs = epoch_data(fs, trigger_times, filtered_data.T) # Filtering changed shape of data, so use transpose for shape (samples, channels)
+filtered_data_epochs = epoch_data(fs, trigger_times, filtered_data.T,  epoch_start_time=0, epoch_end_time=10) # Filtering changed shape of data, so use transpose for shape (samples, channels)
 
 # Epoch the envelope
-envelope_epochs = epoch_data(fs, trigger_times, envelope.T) # Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
+envelope_epochs = epoch_data(fs, trigger_times, envelope.T, epoch_start_time=0, epoch_end_time=10) # Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
 
 #%% Separate clean and artifact epochs
 
 clean_epochs, artifact_epochs = separate_artifact_trials(envelope_epochs, is_artifact_trial)
+
+#%% Average around mu and beta electrodes
+central_electrodes = [28, 34]
+surrounding_map = {
+    28: [17, 18, 19, 27, 28, 29, 37, 38, 39],
+    34: [23, 24, 25, 33, 34, 35, 43, 44, 45]
+}
+# class_indices = [1, 4, 5, 6]
+class_indices = np.where(class_labels == 3)[0][:10]
+
+average_around_electrodes_epoched(envelope_epochs, fs, central_electrodes, surrounding_map, trials=class_indices)
 
 #%% Frequency spectra of the data
 
