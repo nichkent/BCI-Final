@@ -168,6 +168,22 @@ for class_to_compare_index1 in range(4): # Only use 4 classes, 5th is test data
             
             comparison_number += 1
 
+#%% Compare frequency data across time in epochs
+
+# Get the epochs (rest vs. active MI)
+eeg_epochs_rest = epoch_data(fs, trigger_times, raw_data, epoch_start_time=0, epoch_end_time=2)
+eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
+
+# Get the frequency data of the epochs (resting period)
+eeg_epochs_fft_rest, fft_frequencies_rest = get_frequency_spectrum(eeg_epochs_rest, fs)
+spectra_by_class = get_power_spectra(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
+plot_power_spectrum(eeg_epochs_fft_rest, fft_frequencies_rest, spectra_by_class, channels=[28,34], subject='l1b')
+
+# Get the frequency data of the epochs (motor imagery)
+eeg_epochs_motor_imagery, fft_frequencies_motor_imagery = get_frequency_spectrum(eeg_epochs_motor_imagery, fs)
+spectra_by_class = get_power_spectra(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, class_labels)
+plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class, channels=[28,34], subject='l1b')
+
 #%%
 # Next Steps:
 # Create Topo maps of the subjects
