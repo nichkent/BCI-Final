@@ -27,9 +27,9 @@ def get_frequency_spectrum(eeg_epochs, fs):
     return eeg_epochs_fft, fft_frequencies
 
 #%% Get the power spectra
+def get_power_spectra_epoched(eeg_epochs_fft, fft_frequencies, class_labels):
+    print(eeg_epochs_fft.shape)
 
-def get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels):
-    
     # Sort class labels (take first index of tuple)
     class1 = np.where(class_labels==1)[0]
     class2 = np.where(class_labels==2)[0]
@@ -131,3 +131,47 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, chann
     
     # save image
     plt.savefig(f'MI_{subject}_frequency_content.png')
+
+
+def get_power_spectra_single(epoch_fft, sfreq):
+    # Calculate power spectrum
+    power = np.abs(epoch_fft) ** 2
+
+    # Find maximum power by channel
+    normalization_factor = power.max(0)
+
+    normalized_power_mean = np.zeros(power.shape)
+
+    channel_count = epoch_fft.shape[0]  # Second index is number of channels
+    for channel_index in range(channel_count):
+        normalized_power_mean[channel_index, :] = power[channel_index, :] / normalization_factor[channel_index]
+
+    spectrum_db = 10 * (np.log10(normalized_power_mean))
+
+    return spectrum_db
+
+def plot_power_spectrum_single(freqs, spectrum, class_label, channels, subject, epoch_index):
+    plt.figure(figsize=(10, 6))
+    for i, channel in enumerate(channels):
+        plt.plot(freqs, spectrum[channel,:], label=f'Channel {channel}')
+    plt.xlabel('Frequency (Hz)')
+    plt.ylabel('Power (uV^2/Hz)')
+    plt.title(f'Power Spectrum of Epoch {epoch_index} {class_label} for {subject}')
+    plt.legend()
+    plt.grid(True)
+    plt.show()
+
+
+def get_frequency_spectrum_single(epoch, fs):
+    # Reshape the epoched data so samples occupy last axis
+    reshaped_eeg_epochs = epoch.transpose(1, 0)  # Shape (channels, samples)
+    print("Spectrum: ", reshaped_eeg_epochs.shape)
+
+    # take the Fourier Transform of the epoched EEG data
+    eeg_epoch_fft = np.fft.rfft(reshaped_eeg_epochs)
+
+    # find the corresponding frequencies from the epoched EEG data
+    fft_frequencies = np.fft.rfftfreq(n=reshaped_eeg_epochs.shape[-1],
+                                      d=1 / fs)  # n is the number of samples in the signal (final dimension) in eeg_epochs), d is the inverse of sampling frequency
+
+    return eeg_epoch_fft, fft_frequencies

@@ -5,16 +5,16 @@ Created on Tue Apr 23 18:48:11 2024
 
 @authors: Arthur Dolimier, Nicholas Kent, Claire Leahy, and Aiden Pricer-Coan
 """
-
+import matplotlib.pyplot as plt
 #%% Import packages
 import numpy as np
 from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, plot_confidence_intervals_with_significance
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, separate_by_class, make_finite_filter, filter_data, get_envelope
-from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra, plot_power_spectrum
+from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra_epoched, plot_power_spectrum, \
+    get_power_spectra_single, get_frequency_spectrum_single, plot_power_spectrum_single
 from plot_results import average_around_electrodes_epoched
-from plot_topo import plot_topo
 
 #%% Load the data
 
@@ -32,6 +32,8 @@ class_labels = data_dictionary['Class Label']  # All the class labels
 trigger_times = data_dictionary['Start Times']  # Start time of each trial
 is_artifact_trial = data_dictionary['Artifact Trials'] # Truth data of artifact in each trial
 class_label = 1  # Change to be a number 1-4
+
+classes = ["left hand", "right hand", "foot", "tongue"]
 
 # Call to plot_raw_data with your choice of class
 plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
@@ -62,10 +64,10 @@ eeg_epochs = epoch_data(fs, trigger_times, raw_data)
 # plot_epoch_data(eeg_epochs, fs)
 
 # Epoch filtered data
-filtered_data_epochs = epoch_data(fs, trigger_times, filtered_data.T,  epoch_start_time=0, epoch_end_time=10) # Filtering changed shape of data, so use transpose for shape (samples, channels)
+filtered_data_epochs = epoch_data(fs, trigger_times, filtered_data.T,  epoch_start_time=2, epoch_end_time=7) # Filtering changed shape of data, so use transpose for shape (samples, channels)
 
 # Epoch the envelope
-envelope_epochs = epoch_data(fs, trigger_times, envelope.T, epoch_start_time=0, epoch_end_time=10) # Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
+envelope_epochs = epoch_data(fs, trigger_times, envelope.T, epoch_start_time=2, epoch_end_time=7) # Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
 
 #%% Separate clean and artifact epochs
 
@@ -78,9 +80,9 @@ surrounding_map = {
     34: [23, 24, 25, 33, 34, 35, 43, 44, 45]
 }
 # class_indices = [1, 4, 5, 6]
-class_indices = np.where(class_labels == 3)[0][:10]
+class_indices = np.where(class_labels == 3)[0][:3]
 
-average_around_electrodes_epoched(envelope_epochs, fs, central_electrodes, surrounding_map, trials=class_indices)
+average_around_electrodes_epoched(envelope_epochs, central_electrodes, surrounding_map, trials=class_indices, time=np.arange(2, 7, 1 / fs))
 
 #%% Frequency spectra of the data
 
@@ -88,14 +90,14 @@ average_around_electrodes_epoched(envelope_epochs, fs, central_electrodes, surro
 eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 
 # Get the power spectra of each class
-spectra_by_class = get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels)
+spectra_by_class = get_power_spectra_epoched(eeg_epochs_fft, fft_frequencies, class_labels)
 
 # Plot the power spectra
 plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 34], subject='l1b')
 
 # For filtered data
 filtered_epochs_fft, filtered_fft_frequencies = get_frequency_spectrum(filtered_data_epochs, fs)
-filtered_spectra_by_class = get_power_spectra(filtered_epochs_fft, filtered_fft_frequencies, class_labels)
+filtered_spectra_by_class = get_power_spectra_epoched(filtered_epochs_fft, filtered_fft_frequencies, class_labels)
 plot_power_spectrum(filtered_epochs_fft, filtered_fft_frequencies, filtered_spectra_by_class, channels=[28, 31, 34], subject='l1b')
 
 #%% Bootstrap for significance
@@ -163,9 +165,9 @@ comparison_number = 0
 for class_to_compare_index1 in range(4): # Only use 4 classes, 5th is test data
     for class_to_compare_index2 in range(4): # Only use 4 classes, 5th is test data
         if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
-            
+
             plot_confidence_intervals_with_significance(class_erps[class_to_compare_index1], class_erps[class_to_compare_index2], erp_times_classes, class_epochs[class_to_compare_index1], class_epochs[class_to_compare_index2], corrected_p_values_classes[comparison_number], subject_label, class_labels)
-            
+
             comparison_number += 1
 
 #%% Compare frequency data across time in epochs
@@ -176,15 +178,28 @@ eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_t
 
 # Get the frequency data of the epochs (resting period)
 eeg_epochs_fft_rest, fft_frequencies_rest = get_frequency_spectrum(eeg_epochs_rest, fs)
-spectra_by_class = get_power_spectra(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
+spectra_by_class = get_power_spectra_epoched(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
 plot_power_spectrum(eeg_epochs_fft_rest, fft_frequencies_rest, spectra_by_class, channels=[28,34], subject='l1b')
+plt.show()
 
 # Get the frequency data of the epochs (motor imagery)
 eeg_epochs_motor_imagery, fft_frequencies_motor_imagery = get_frequency_spectrum(eeg_epochs_motor_imagery, fs)
-spectra_by_class = get_power_spectra(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, class_labels)
+spectra_by_class = get_power_spectra_epoched(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, class_labels)
 plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class, channels=[28,34], subject='l1b')
+plt.show()
 
-#%%
-# Next Steps:
-# Create Topo maps of the subjects
-# Create error matrix from all trials for each time-point 0.0 s ≤ t ≤ 7.0 s .
+#%% For one epoch
+eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
+
+index_epoch = 6
+current_epoch = eeg_epochs_motor_imagery[index_epoch]
+
+eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(current_epoch, fs)
+spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
+print(spectrum)
+class_label_current = classes[int(class_labels[index_epoch])]
+
+plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28, 34], subject='l1b', epoch_index=index_epoch)
+
+print(eeg_epoch_fft)
+print(fft_frequencies)

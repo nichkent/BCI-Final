@@ -38,7 +38,7 @@ def average_around_electrodes(eeg_data, fs, central_electrodes, surrounding_map)
     plt.show()
 
 
-def average_around_electrodes_epoched(eeg_epochs, fs, central_electrodes, surrounding_map, trials):
+def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surrounding_map, trials, time, show_overall_average=False):
     """
     Averages the EEG data around specified central electrodes using their surrounding electrodes,
     for episodic data formatted as num_trials x samples_per_epoch x num_channels.
@@ -47,15 +47,12 @@ def average_around_electrodes_epoched(eeg_epochs, fs, central_electrodes, surrou
     - eeg_epochs (numpy.ndarray): The EEG data array with dimensions [num_trials, samples_per_epoch, num_channels].
     - central_electrodes (list): List of central electrodes to average around.
     - surrounding_map (dict): Dictionary mapping each central electrode to a list of surrounding electrodes.
-
-    Plots:
-    - Subplots of averaged EEG signals for each trial for each central electrode.
     """
     num_trials = len(trials)
     # samples_per_epoch = eeg_epochs.shape[1]
     num_plots = len(central_electrodes)
 
-    time = np.arange(0, 10, 1 / fs)
+    all_averages = []
 
     fig, axes = plt.subplots(nrows=num_plots, ncols=num_trials, figsize=(num_trials * 3, num_plots * 3))
     if num_plots == 1:
@@ -67,6 +64,7 @@ def average_around_electrodes_epoched(eeg_epochs, fs, central_electrodes, surrou
 
         for j, trial in enumerate(trials):
             averaged_signal = np.mean(eeg_epochs[trial, :, surrounding_indices], axis=0)
+            all_averages.append(averaged_signal)
             ax = axes[i, j]
             ax.plot(time, averaged_signal)
             ax.set_title(f"Trial {trial + 1}, Electrode {electrode}")
@@ -75,3 +73,7 @@ def average_around_electrodes_epoched(eeg_epochs, fs, central_electrodes, surrou
 
     plt.tight_layout()
     plt.show()
+
+    if show_overall_average:
+        plt.plot(time, np.mean(all_averages, axis=0))
+        plt.show()
