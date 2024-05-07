@@ -91,6 +91,12 @@ def get_power_spectra(eeg_epochs_fft, fft_frequencies, class_labels):
     spectrum_db_class4 = 10*(np.log10(normalized_class4_power_mean))
     spectrum_db_test_class = 10*(np.log10(normalized_test_class_power_mean))
     
+    # spectrum_db_class1 = 10*(np.log10(class1_power_mean))
+    # spectrum_db_class2 = 10*(np.log10(class2_power_mean))
+    # spectrum_db_class3 = 10*(np.log10(class3_power_mean))
+    # spectrum_db_class4 = 10*(np.log10(class4_power_mean))
+    # spectrum_db_test_class = 10*(np.log10(test_class_power_mean))
+    
     # Create a list to return spectra together
     spectra_by_class = [spectrum_db_class1, spectrum_db_class2, spectrum_db_class3, spectrum_db_class4, spectrum_db_test_class]
     
@@ -124,4 +130,4 @@ def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, chann
     figure.tight_layout()
     
     # save image
-    plt.savefig(f'MI_S{subject}_frequency_content.png')
+    plt.savefig(f'MI_{subject}_frequency_content.png')
