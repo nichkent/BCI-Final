@@ -77,3 +77,5 @@ def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surroundin
     if show_overall_average:
         plt.plot(time, np.mean(all_averages, axis=0))
         plt.show()
+
+

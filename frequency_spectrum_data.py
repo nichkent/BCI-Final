@@ -28,7 +28,7 @@ def get_frequency_spectrum(eeg_epochs, fs):
 
 #%% Get the power spectra
 def get_power_spectra_epoched(eeg_epochs_fft, fft_frequencies, class_labels):
-    print(eeg_epochs_fft.shape)
+    # print(eeg_epochs_fft.shape)
 
     # Sort class labels (take first index of tuple)
     class1 = np.where(class_labels==1)[0]
@@ -142,7 +142,7 @@ def get_power_spectra_single(epoch_fft, sfreq):
 
     normalized_power_mean = np.zeros(power.shape)
 
-    channel_count = epoch_fft.shape[0]  # Second index is number of channels
+    channel_count = epoch_fft.shape[0]
     for channel_index in range(channel_count):
         normalized_power_mean[channel_index, :] = power[channel_index, :] / normalization_factor[channel_index]
 
@@ -150,12 +150,13 @@ def get_power_spectra_single(epoch_fft, sfreq):
 
     return spectrum_db
 
-def plot_power_spectrum_single(freqs, spectrum, class_label, channels, subject, epoch_index):
+def plot_power_spectrum_single(fft_frequencies, spectrum, class_label, channels, subject, epoch_index):
     plt.figure(figsize=(10, 6))
     for i, channel in enumerate(channels):
-        plt.plot(freqs, spectrum[channel,:], label=f'Channel {channel}')
+        plt.plot(fft_frequencies, spectrum[channel,:], label=f'Channel {channel}')
     plt.xlabel('Frequency (Hz)')
-    plt.ylabel('Power (uV^2/Hz)')
+    plt.ylabel('Power (dB)')
+    plt.xlim([0, 35])
     plt.title(f'Power Spectrum of Epoch {epoch_index} {class_label} for {subject}')
     plt.legend()
     plt.grid(True)
@@ -165,7 +166,6 @@ def plot_power_spectrum_single(freqs, spectrum, class_label, channels, subject, 
 def get_frequency_spectrum_single(epoch, fs):
     # Reshape the epoched data so samples occupy last axis
     reshaped_eeg_epochs = epoch.transpose(1, 0)  # Shape (channels, samples)
-    print("Spectrum: ", reshaped_eeg_epochs.shape)
 
     # take the Fourier Transform of the epoched EEG data
     eeg_epoch_fft = np.fft.rfft(reshaped_eeg_epochs)

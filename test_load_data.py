@@ -171,7 +171,8 @@ for class_to_compare_index1 in range(4): # Only use 4 classes, 5th is test data
             comparison_number += 1
 
 #%% Compare frequency data across time in epochs
-
+# import matplotlib as mpl
+# mpl.use('TkAgg')
 # Get the epochs (rest vs. active MI)
 eeg_epochs_rest = epoch_data(fs, trigger_times, raw_data, epoch_start_time=0, epoch_end_time=2)
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
@@ -185,21 +186,87 @@ plt.show()
 # Get the frequency data of the epochs (motor imagery)
 eeg_epochs_motor_imagery, fft_frequencies_motor_imagery = get_frequency_spectrum(eeg_epochs_motor_imagery, fs)
 spectra_by_class = get_power_spectra_epoched(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, class_labels)
-plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class, channels=[28,34], subject='l1b')
+plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class, channels=[33,34], subject='l1b')
 plt.show()
 
 #%% For one epoch
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
 
-index_epoch = 6
+index_epoch = 82
 current_epoch = eeg_epochs_motor_imagery[index_epoch]
 
 eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(current_epoch, fs)
 spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
-print(spectrum)
-class_label_current = classes[int(class_labels[index_epoch])]
+# print(spectrum)
+print(int(class_labels[index_epoch]))
+class_label_current = classes[int(class_labels[index_epoch]) - 1]
 
-plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28, 34], subject='l1b', epoch_index=index_epoch)
+plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28], subject='l1b', epoch_index=index_epoch)
 
-print(eeg_epoch_fft)
-print(fft_frequencies)
+#%% Testing predictions with plot
+eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
+
+# class 1 with channel 28: 4.5Hz   > 0. NOT SURE ABOUT THIS ONE
+# class 2 with channel 30: 8.75Hz
+# class 3 with channel 28: 4Hz     NEGATIVE PEAK < -5
+# class 4 with channel 28: 12.75Hz
+
+# Change these to test out
+channel = 28
+frequency = 12.5
+current_class = 4
+
+class1_indices = np.where(class_labels == current_class)[0]
+class1_epoch = eeg_epochs_motor_imagery[class1_indices]
+
+powers = []
+for epoch in class1_epoch:
+    eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(epoch, fs)
+    spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
+    frequency_value = spectrum[channel, np.where(fft_frequencies == frequency)[0][0]]
+    powers.append(frequency_value)
+
+print("max: ", np.max(powers))
+print("min: ", np.min(powers))
+print("mean: ", np.mean(powers))
+
+#%% predictions
+eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
+
+predicted_classes = []
+for i, epoch in enumerate(eeg_epochs_motor_imagery):
+    eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(epoch, fs)
+    spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
+
+    # skip when not class
+    if np.isnan(class_labels[i]):
+        predicted_classes.append(0)
+        continue
+
+    if spectrum[34, np.where(fft_frequencies == 12.75)[0][0]] > -1:
+        predicted_classes.append(4)
+    elif spectrum[28, np.where(fft_frequencies == 20.5)] < -15:
+        predicted_classes.append(1)
+    elif spectrum[34, np.where(fft_frequencies == 12.5)] < -9:
+        predicted_classes.append(2)
+    else:
+        # We don't have a good frequency for class 3 so for now
+        # whatever is not caught by the other rules will be predicted as class 3
+        predicted_classes.append(3)
+
+correct_predictions = [0, 0, 0, 0]
+incorrect_predictions = [0, 0, 0, 0]
+for i, actual_class in enumerate(class_labels):
+    if np.isnan(actual_class):
+        continue
+
+    if predicted_classes[i] == actual_class:
+        correct_predictions[int(actual_class) - 1] += 1
+    else:
+        incorrect_predictions[int(actual_class) - 1] += 1
+
+print("Correct: ", correct_predictions)
+print("Incorrect: ", incorrect_predictions)
+print(f"Accuracy classes: ")
+for i in range(4):
+    print(f"Class {i+1}: {(correct_predictions[i]/(correct_predictions[i]+incorrect_predictions[i]))*100:.2f}%")
