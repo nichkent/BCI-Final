@@ -64,13 +64,4 @@ def measure_power_change(raw_data, trigger_times, class_labels, fs, epoch_durati
 
 
 
-subject_label = 'l1b'
-data_dictionary = load_eeg_data(subject='/Users/aiden/PycharmProjects/BCI-Final/l1b.mat')
-trigger_times = data_dictionary['Start Times']
-raw_data = data_dictionary['Signal']
-class_labels = data_dictionary['Class Label']
-fs = data_dictionary['Sampling Frequency']
-
-beta_power_change = measure_power_change(raw_data, trigger_times, class_labels, fs)
-print(beta_power_change)
 
