@@ -234,5 +234,5 @@ print("mean: ", np.mean(powers))
 #%% predictions
 _, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 actual_classes, predicted_classes = get_predictions(raw_data, training_class_labels, train_trigger_times, fs, is_artifact_trial, epoch_start_time=3, epoch_end_time=7)
-plot_confusion_matrix(actual_classes, predicted_classes)
+plot_confusion_matrix(actual_classes, predicted_classes, class_names=classes)
 

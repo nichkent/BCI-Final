@@ -62,13 +62,13 @@ def get_predictions(raw_data, class_labels, trigger_times, fs, is_artifact_trial
         print(f"Class {i+1}: {(correct_predictions[i]/(correct_predictions[i]+incorrect_predictions[i]))*100:.2f}%")
 
     return clean_class_labels, predicted_classes
-def plot_confusion_matrix(actual_classes, predicted_classes):
+def plot_confusion_matrix(actual_classes, predicted_classes, class_names):
     # Generate the confusion matrix
     cm = confusion_matrix(actual_classes, predicted_classes)
 
     # Plot the confusion matrix
     plt.figure(figsize=(8, 6))
-    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=[1, 2, 3, 4], yticklabels=[1, 2, 3, 4])
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
     plt.xlabel('Predicted Classes')
     plt.ylabel('Actual Classes')
     plt.title('Confusion Matrix')
