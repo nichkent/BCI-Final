@@ -1,3 +1,13 @@
+"""
+This script provides functions to plot analysis results from the eeg data.
+
+@author: Aiden Pricer-Coan
+
+file: plot_results.py
+BME 6710 - Dr. Jangraw
+Project 3: Public Dataset Wrangling
+"""
+# Import statements
 import numpy as np
 from matplotlib import pyplot as plt
 
@@ -38,7 +48,8 @@ def average_around_electrodes(eeg_data, fs, central_electrodes, surrounding_map)
     plt.show()
 
 
-def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surrounding_map, trials, time, show_overall_average=False):
+def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surrounding_map, trials, time,
+                                      show_overall_average=False):
     """
     Averages the EEG data around specified central electrodes using their surrounding electrodes,
     for episodic data formatted as num_trials x samples_per_epoch x num_channels.

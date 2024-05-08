@@ -1,5 +1,5 @@
 """
-This script provides a function for creating epoched eeg data.
+This script provides a function for returning epoched eeg data.
 
 @author: Aiden Pricer-Coan
 
@@ -54,28 +54,5 @@ def epoch_data(fs, trigger_time, eeg_data, epoch_start_time=2, epoch_end_time=7)
 
     return eeg_epochs
 
-'''
-def plot_epoch_data(epoch_data, fs):
-    """
-    Plots the epoched EEG data.
 
-    Parameters:
-        epoch_data: np.array - 3D array representing epoched EEG data
-        fs: int - Sampling frequency in samples per second
-    """
-    num_epochs, samples_per_epoch, num_channels = epoch_data.shape
-    time = np.arange(samples_per_epoch) / fs  # Time axis
-
-    # Plot each epoch
-    for epoch_idx in range(num_epochs):
-        plt.figure(figsize=(10, 6))
-        for channel_idx in range(num_channels):
-            plt.plot(time, epoch_data[epoch_idx, :, channel_idx], label=f'Channel {channel_idx+1}')
-        plt.title(f'Epoch {epoch_idx+1}')
-        plt.xlabel('Time (s)')
-        plt.ylabel('EEG Signal')
-        plt.legend()
-        plt.grid(True)
-        plt.show()
-'''
 
