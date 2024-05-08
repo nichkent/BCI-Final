@@ -165,7 +165,7 @@ def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
         # Updated clean_epochs if there isn't an artifact
         if is_artifact_trial[epoch_index] == 0:
             clean_epochs.append(epoched_data[epoch_index])
-            clean_class_labels.append(class_labels[epoch_index])
+            clean_class_labels.append(int(class_labels[epoch_index]))
          
         # Update artifact_epochs if there is an artifact
         elif is_artifact_trial[epoch_index] == 1:

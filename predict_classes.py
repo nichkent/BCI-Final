@@ -3,11 +3,15 @@
 """
 Created on Tue May  7 19:17:22 2024
 
-@author: ClaireLeahy
+@author: Arthur
 """
 
 #%% Import packages
 import numpy as np
+from matplotlib import pyplot as plt
+from sklearn.metrics import confusion_matrix
+import seaborn as sns
+
 from plot_epoch_data import epoch_data
 from clean_data import separate_test_and_train_data, separate_artifact_trials
 from frequency_spectrum_data import get_power_spectra_single, get_frequency_spectrum_single
@@ -57,9 +61,15 @@ def get_predictions(raw_data, class_labels, trigger_times, fs, is_artifact_trial
     for i in range(4):
         print(f"Class {i+1}: {(correct_predictions[i]/(correct_predictions[i]+incorrect_predictions[i]))*100:.2f}%")
 
-#%% Generate the predictions
+    return clean_class_labels, predicted_classes
+def plot_confusion_matrix(actual_classes, predicted_classes):
+    # Generate the confusion matrix
+    cm = confusion_matrix(actual_classes, predicted_classes)
 
-_, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
-get_predictions(raw_data, training_class_labels, train_trigger_times, fs, is_artifact_trial, epoch_start_time=3, epoch_end_time=7)
-
-
+    # Plot the confusion matrix
+    plt.figure(figsize=(8, 6))
+    sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=[1, 2, 3, 4], yticklabels=[1, 2, 3, 4])
+    plt.xlabel('Predicted Classes')
+    plt.ylabel('Actual Classes')
+    plt.title('Confusion Matrix')
+    plt.show()
