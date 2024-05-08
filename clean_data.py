@@ -41,6 +41,20 @@ Is best way of approaching artifact removal looking at accuracy with and without
 #%% Remove NaN values from raw data
 
 def remove_nan_values(raw_data):
+    """
+    Description
+    -----------
+    Function that replaces NaN values in the raw data (points of breaks or data saturation) with the median EEG value for that channel.
+
+    Parameters
+    ----------
+    - raw_data <np.array of float>: The EEG data in µV. The size of this array is (samples, channels).
+
+    Returns
+    -------
+    - raw_data_replaced : <np.array of float>: The updated EEG data with NaN values removed in µV. The size of this array is (samples, channels).
+
+    """
     
     # Copy raw_data to alter later
     raw_data_replaced = raw_data
@@ -72,6 +86,26 @@ def remove_nan_values(raw_data):
 #%% Remove test set trials
 
 def separate_test_and_train_data(class_labels, trigger_times):
+    """
+    Description
+    -----------
+    This function separates data into training or testing data based on the presence of a class label.
+
+    Parameters
+    ----------
+    - class_labels <np.array of float>: Array containing the class label associated with an epoch, values 1-4 or NaN. The shape is (epochs,).
+    - trigger_times <np.array of int>: Array containing the sample index at which and epoch begins. The shape is (epochs,).
+
+    Returns
+    -------
+    - test_trigger_times : TYPE
+        DESCRIPTION.
+    - train_trigger_times : TYPE
+        DESCRIPTION.
+    - training_class_labels : TYPE
+        DESCRIPTION.
+
+    """
     
     # Get epoch indices where data is test data
     is_test = np.isnan(class_labels)
@@ -88,6 +122,29 @@ def separate_test_and_train_data(class_labels, trigger_times):
 #%% Separate clean epochs from epochs with artifacts
 
 def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
+    """
+    Description
+    -----------
+
+    Parameters
+    ----------
+    epoched_data : TYPE
+        DESCRIPTION.
+    is_artifact_trial : TYPE
+        DESCRIPTION.
+    class_labels : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    clean_epochs : TYPE
+        DESCRIPTION.
+    artifact_epochs : TYPE
+        DESCRIPTION.
+    clean_class_labels : TYPE
+        DESCRIPTION.
+
+    """
     
     # Convert artifact_trials to list for counting
     is_artifact_trial = list(is_artifact_trial)
@@ -123,7 +180,24 @@ def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
 
 #%% Separate start times by class
 
-def separate_by_class(class_labels, trigger_times):
+def separate_trigger_times_by_class(class_labels, trigger_times):
+    """
+    Description
+    -----------
+
+    Parameters
+    ----------
+    class_labels : TYPE
+        DESCRIPTION.
+    trigger_times : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    separated_trigger_times : TYPE
+        DESCRIPTION.
+
+    """
     
     # Sort class labels
     class1 = np.where(class_labels==1)
@@ -151,6 +225,28 @@ Could make more general, decide on finite or infinite. Select parameters from th
 """
   
 def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
+    """
+    
+
+    Parameters
+    ----------
+    low_cutoff : TYPE
+        DESCRIPTION.
+    high_cutoff : TYPE
+        DESCRIPTION.
+    filter_type : TYPE, optional
+        DESCRIPTION. The default is 'hann'.
+    filter_order : TYPE, optional
+        DESCRIPTION. The default is 10.
+    fs : TYPE, optional
+        DESCRIPTION. The default is 250.
+
+    Returns
+    -------
+    filter_coefficients : TYPE
+        DESCRIPTION.
+
+    """
     
     # Get Nyquist frequency to use in filter
     nyquist_frequency = fs/2
@@ -163,6 +259,22 @@ def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order
 #%% Filter data
 
 def filter_data(data, b):
+    """
+    
+
+    Parameters
+    ----------
+    data : TYPE
+        DESCRIPTION.
+    b : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    filtered_data : TYPE
+        DESCRIPTION.
+
+    """
     
     # Variables for sizing
     sample_count = data.shape[0] # 1st dimension of EEG is number of samples
@@ -181,6 +293,20 @@ def filter_data(data, b):
 #%% Generate the envelope of filtered data
 
 def get_envelope(filtered_data):
+    """
+    
+
+    Parameters
+    ----------
+    filtered_data : TYPE
+        DESCRIPTION.
+
+    Returns
+    -------
+    envelope : TYPE
+        DESCRIPTION.
+
+    """
     
     # Variables for sizing
     channel_count = filtered_data.shape[0] # 1st dimension is number of channels
