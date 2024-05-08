@@ -12,7 +12,7 @@ from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, plot_confidence_intervals_with_significance
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, separate_by_class, make_finite_filter, filter_data, get_envelope
-from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra
+from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra_epoched
 from plot_results import average_around_electrodes_epoched
 
 #%% plotting function
@@ -113,16 +113,16 @@ eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_t
 
 # get the frequency data of the epochs (motor imagery)
 eeg_epochs_fft_motor_imagery, fft_frequencies_motor_imagery = get_frequency_spectrum(eeg_epochs_motor_imagery, fs)
-spectra_by_class_motor_imagery = get_power_spectra(eeg_epochs_fft_motor_imagery, fft_frequencies_motor_imagery, class_labels)
+spectra_by_class_motor_imagery = get_power_spectra_epoched(eeg_epochs_fft_motor_imagery, fft_frequencies_motor_imagery, class_labels)
 #plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class_motor_imagery, subject='l1b', channels_to_plot=[28,34], class_to_plot=1)
 
 # get the frequency data of the epochs (resting period)
 eeg_epochs_fft_rest, fft_frequencies_rest = get_frequency_spectrum(eeg_epochs_rest, fs)
-spectra_by_class_rest = get_power_spectra(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
+spectra_by_class_rest = get_power_spectra_epoched(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
 #plot_power_spectrum(eeg_epochs_fft_rest, fft_frequencies_rest, spectra_by_class_rest, subject='l1b', channels_to_plot=[28,34], class_to_plot=1)
 
 plot_multiple_power_spectra(spectra_by_class_motor_imagery, spectra_by_class_rest, fft_frequencies_motor_imagery, fft_frequencies_rest, subject='l1b', channels_to_plot=[28,34], class_to_plot=4, activity1='Active', activity2='Rest')
-
+plt.show()
 
 #%% Bootstrap
 
