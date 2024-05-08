@@ -87,14 +87,17 @@ def separate_test_and_train_data(class_labels, trigger_times):
     
 #%% Separate clean epochs from epochs with artifacts
 
-def separate_artifact_trials(epoched_data, is_artifact_trial):
+def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
     
     # Convert artifact_trials to list for counting
     is_artifact_trial = list(is_artifact_trial)
     
-    # Create empty lists to contain the "clean" and "artifact" epochs
+    # Create empty lists to contain the "clean" and "artifact" epochs (lists because of unknown sizing)
     clean_epochs = []
     artifact_epochs = []
+    
+    # Create empty list to contain class labels associated with clean data (lists because of unknown sizing)
+    clean_class_labels = []
     
     # Get epoch count for indexing
     epoch_count = epoched_data.shape[0]
@@ -105,6 +108,7 @@ def separate_artifact_trials(epoched_data, is_artifact_trial):
         # Updated clean_epochs if there isn't an artifact
         if is_artifact_trial[epoch_index] == 0:
             clean_epochs.append(epoched_data[epoch_index])
+            clean_class_labels.append(class_labels[epoch_index])
          
         # Update artifact_epochs if there is an artifact
         elif is_artifact_trial[epoch_index] == 1:
@@ -113,8 +117,9 @@ def separate_artifact_trials(epoched_data, is_artifact_trial):
     # Convert to arrays
     clean_epochs = np.array(clean_epochs)
     artifact_epochs = np.array(artifact_epochs)
+    clean_class_labels = np.array(clean_class_labels)
     
-    return clean_epochs, artifact_epochs
+    return clean_epochs, artifact_epochs, clean_class_labels
 
 #%% Separate start times by class
 

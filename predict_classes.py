@@ -9,17 +9,18 @@ Created on Tue May  7 19:17:22 2024
 #%% Import packages
 import numpy as np
 from plot_epoch_data import epoch_data
-from clean_data import separate_test_and_train_data
+from clean_data import separate_test_and_train_data, separate_artifact_trials
 from frequency_spectrum_data import get_power_spectra_single, get_frequency_spectrum_single
 
 #%% Function to get predictions
 
-def get_predictions(raw_data, class_labels, trigger_times, fs, epoch_start_time=3, epoch_end_time=7):
+def get_predictions(raw_data, class_labels, trigger_times, fs, is_artifact_trial, epoch_start_time=3, epoch_end_time=7):
     
     eeg_epochs = epoch_data(fs, trigger_times, raw_data, epoch_start_time, epoch_end_time)
+    clean_epochs, _, clean_class_labels = separate_artifact_trials(eeg_epochs, is_artifact_trial, class_labels)
     
     predicted_classes = []
-    for i, epoch in enumerate(eeg_epochs):
+    for i, epoch in enumerate(clean_epochs):
         eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(epoch, fs)
         spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
     
@@ -41,7 +42,7 @@ def get_predictions(raw_data, class_labels, trigger_times, fs, epoch_start_time=
     
     correct_predictions = [0, 0, 0, 0]
     incorrect_predictions = [0, 0, 0, 0]
-    for i, actual_class in enumerate(class_labels):
+    for i, actual_class in enumerate(clean_class_labels):
         if np.isnan(actual_class):
             continue
     
@@ -57,5 +58,8 @@ def get_predictions(raw_data, class_labels, trigger_times, fs, epoch_start_time=
         print(f"Class {i+1}: {(correct_predictions[i]/(correct_predictions[i]+incorrect_predictions[i]))*100:.2f}%")
 
 #%% Generate the predictions
+
 _, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
-get_predictions(raw_data, training_class_labels, train_trigger_times, fs, epoch_start_time=3, epoch_end_time=7)
+get_predictions(raw_data, training_class_labels, train_trigger_times, fs, is_artifact_trial, epoch_start_time=3, epoch_end_time=7)
+
+
