@@ -119,7 +119,7 @@ def get_power_spectra_epoched(eeg_epochs_fft, fft_frequencies, class_labels):
 
 def plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels, subject):
     # Set up figure
-    figure, channel_plot = plt.subplots(len(channels), sharex='True', figsize=(10, 6))
+    figure, channel_plot = plt.subplots(len(channels), sharex=True, figsize=(10, 6))
 
     for plot_index, channel in enumerate(channels):  # plot_index to access a subplot
 

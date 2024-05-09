@@ -47,7 +47,7 @@ def plot_power_spectrum(spectra_by_class, fft_frequencies, subject, channels_to_
 
         # Plot the classes together for a given channel
         # Set up figure
-        figure, channel_plot = plt.subplots(len(channels_to_plot), sharex='True', figsize=(10, 6))
+        figure, channel_plot = plt.subplots(len(channels_to_plot), sharex=True, figsize=(10, 6))
 
         for plot_index, channel in enumerate(channels_to_plot):  # plot_index to access a subplot
 
@@ -145,7 +145,7 @@ def plot_power_spectra_confidence_intervals(eeg_epochs_fft_active, eeg_epochs_ff
                                             spectra_by_class_rest, fft_frequencies_active, fft_frequencies_rest,
                                             subject, channels_to_plot, class_to_plot, activity1='Active',
                                             activity2='Rest'):
-    figure, channel_plot = plt.subplots(len(channels_to_plot), sharex='True', sharey='True', figsize=(10, 6))
+    figure, channel_plot = plt.subplots(len(channels_to_plot), sharex=True, sharey=True, figsize=(10, 6))
 
     # Calculate the standard error of the mean for the active epochs, averaged over channels
     active_se_mean = np.mean(np.std(eeg_epochs_fft_active, axis=0) / np.sqrt(eeg_epochs_fft_active.shape[0]), axis=1)

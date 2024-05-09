@@ -22,10 +22,10 @@ from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra_ep
 from plot_results import average_around_electrodes_epoched
 from predict_classes import get_predictions, plot_confusion_matrix
 
-# Load the data
+#%% Load the data
 
 # Possible subject labels: 'l1b', 'k6b', or 'k3b'
-subject_label = 'l1b'
+subject_label = 'k6b'
 
 data_dictionary = load_eeg_data(subject=subject_label)
 
@@ -51,10 +51,9 @@ test_trigger_times, train_trigger_times, training_class_labels = separate_test_a
 # Separate start time by class
 separated_trigger_times = separate_trigger_times_by_class(class_labels, trigger_times)
 
-# Filter the data
+#%% Filter the data
 
 # Make the filter
-'''Placeholder cutoffs until more appropriate filter determined'''
 filter_coefficients = make_finite_filter(low_cutoff=0.1, high_cutoff=8, filter_type='hann', filter_order=50, fs=250)
 
 # Clean the data
@@ -62,7 +61,7 @@ raw_data_replaced = remove_nan_values(raw_data)
 filtered_data = filter_data(raw_data_replaced, b=filter_coefficients)
 envelope = get_envelope(filtered_data)
 
-# Epoch the data
+#%% Epoch the data
 
 # Epoch raw EEG data
 eeg_epochs = epoch_data(fs, trigger_times, raw_data)
@@ -82,7 +81,7 @@ envelope_epochs = epoch_data(fs, trigger_times, envelope.T, epoch_start_time=2,
 clean_epochs, artifact_epochs, clean_class_labels = separate_artifact_trials(envelope_epochs, is_artifact_trial,
                                                                              class_labels)
 
-# Average around mu and beta electrodes
+#%% Average around mu and beta electrodes
 central_electrodes = [28, 34]
 surrounding_map = {
     28: [17, 18, 19, 27, 28, 29, 37, 38, 39],
@@ -94,7 +93,7 @@ class_indices = np.where(class_labels == 3)[0][:3]
 average_around_electrodes_epoched(envelope_epochs, central_electrodes, surrounding_map, trials=class_indices,
                                   time=np.arange(2, 7, 1 / fs))
 
-# Frequency spectra of the data
+#%% Frequency spectra of the data
 
 # Take the FFT of the epochs
 eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
@@ -103,13 +102,13 @@ eeg_epochs_fft, fft_frequencies = get_frequency_spectrum(eeg_epochs, fs)
 spectra_by_class = get_power_spectra_epoched(eeg_epochs_fft, fft_frequencies, class_labels)
 
 # Plot the power spectra
-plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 34], subject='l1b')
+plot_power_spectrum(eeg_epochs_fft, fft_frequencies, spectra_by_class, channels=[28, 31, 34], subject=subject_label)
 
 # For filtered data
 filtered_epochs_fft, filtered_fft_frequencies = get_frequency_spectrum(filtered_data_epochs, fs)
 filtered_spectra_by_class = get_power_spectra_epoched(filtered_epochs_fft, filtered_fft_frequencies, class_labels)
 plot_power_spectrum(filtered_epochs_fft, filtered_fft_frequencies, filtered_spectra_by_class, channels=[28, 31, 34],
-                    subject='l1b')
+                    subject=subject_label)
 
 # %% Bootstrap for significance
 
@@ -188,27 +187,24 @@ for class_to_compare_index1 in range(4):  # Only use 4 classes, 5th is test data
 
             comparison_number += 1
 
-# Compare frequency data across time in epochs
-# import matplotlib as mpl
-# mpl.use('TkAgg')
-# Get the epochs (rest vs. active MI)
+#%% Compare frequency data across time in epochs
 eeg_epochs_rest = epoch_data(fs, trigger_times, raw_data, epoch_start_time=0, epoch_end_time=2)
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
 
 # Get the frequency data of the epochs (resting period)
 eeg_epochs_fft_rest, fft_frequencies_rest = get_frequency_spectrum(eeg_epochs_rest, fs)
 spectra_by_class = get_power_spectra_epoched(eeg_epochs_fft_rest, fft_frequencies_rest, class_labels)
-plot_power_spectrum(eeg_epochs_fft_rest, fft_frequencies_rest, spectra_by_class, channels=[28, 34], subject='l1b')
+plot_power_spectrum(eeg_epochs_fft_rest, fft_frequencies_rest, spectra_by_class, channels=[28, 34], subject=subject_label)
 plt.show()
 
 # Get the frequency data of the epochs (motor imagery)
 eeg_epochs_motor_imagery, fft_frequencies_motor_imagery = get_frequency_spectrum(eeg_epochs_motor_imagery, fs)
 spectra_by_class = get_power_spectra_epoched(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, class_labels)
 plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spectra_by_class, channels=[33, 34],
-                    subject='l1b')
+                    subject=subject_label)
 plt.show()
 
-# For one epoch
+#%% For one epoch
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
 
 index_epoch = 82
@@ -216,19 +212,13 @@ current_epoch = eeg_epochs_motor_imagery[index_epoch]
 
 eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(current_epoch, fs)
 spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
-# print(spectrum)
-print(int(class_labels[index_epoch]))
+
 class_label_current = classes[int(class_labels[index_epoch]) - 1]
 
-plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28], subject='l1b', epoch_index=index_epoch)
+plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28], subject=subject_label, epoch_index=index_epoch)
 
-# Testing predictions with plot
+#%% Testing predictions with plot
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
-
-# class 1 with channel 28: 4.5Hz   > 0.
-# class 2 with channel 30: 8.75Hz
-# class 3 with channel 28: 4Hz     NEGATIVE PEAK < -5
-# class 4 with channel 28: 12.75Hz
 
 channel = 28
 frequency = 12.5
@@ -244,11 +234,11 @@ for epoch in class1_epoch:
     frequency_value = spectrum[channel, np.where(fft_frequencies == frequency)[0][0]]
     powers.append(frequency_value)
 
-print("max: ", np.max(powers))
-print("min: ", np.min(powers))
-print("mean: ", np.mean(powers))
+# print("max: ", np.max(powers))
+# print("min: ", np.min(powers))
+# print("mean: ", np.mean(powers))
 
-# predictions
+#%% predictions
 _, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 actual_classes, predicted_classes = get_predictions(raw_data, training_class_labels, train_trigger_times, fs,
                                                     is_artifact_trial, epoch_start_time=3, epoch_end_time=7)
