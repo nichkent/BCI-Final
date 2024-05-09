@@ -220,9 +220,6 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
     # Display the plot
     plt.show()
 
-    # Save the figure
-    plt.savefig(f'Subject_{subject_label}_CI_Plot.png')
-
 
 def plot_erp_by_class(raw_data, separated_trigger_times, class_labels, subject_label, epoch_duration=1750):
     """

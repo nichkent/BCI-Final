@@ -85,7 +85,7 @@ def get_predictions(raw_data, class_labels, trigger_times, fs, is_artifact_trial
     return clean_class_labels, predicted_classes
 
 
-def plot_confusion_matrix(actual_classes, predicted_classes, class_names):
+def plot_confusion_matrix(actual_classes, predicted_classes, class_names, subject):
     """
     Plots a confusion matrix to visualize the accuracy of predictions.
 
@@ -93,18 +93,21 @@ def plot_confusion_matrix(actual_classes, predicted_classes, class_names):
     - actual_classes (list or array-like): The true class labels.
     - predicted_classes (list or array-like): The predicted class labels by the model.
     - class_names (list of str): The names of the classes, which correspond to the unique labels.
+    - subject (str): subject label
     """
 
     # Generate the confusion matrix
     cm = confusion_matrix(actual_classes, predicted_classes)
 
     # Plot the confusion matrix
-    plt.figure(figsize=(8, 6))
+    fig = plt.figure(figsize=(8, 6))
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues', xticklabels=class_names, yticklabels=class_names)
     plt.xlabel('Predicted Classes')
     plt.ylabel('Actual Classes')
-    plt.title('Confusion Matrix')
+    plt.title(f'Confusion Matrix for {subject}')
     plt.show()
+
+    fig.savefig(f"{subject}_confusion_matrix.png")
 
 
 def average_around_electrodes(eeg_data, fs, central_electrodes, surrounding_map):

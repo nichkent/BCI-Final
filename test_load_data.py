@@ -24,7 +24,7 @@ from plot_results import average_around_electrodes_epoched, get_predictions, plo
 #%% Load the data
 
 # Possible subject labels: 'l1b', 'k6b', or 'k3b'
-subject_label = 'l1b'
+subject_label = 'k3b'
 
 data_dictionary = load_eeg_data(subject=subject_label)
 
@@ -183,4 +183,4 @@ test_predictions(raw_data, fs, trigger_times, class_labels, channel=28, frequenc
 _, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 actual_classes, predicted_classes = get_predictions(raw_data, training_class_labels, train_trigger_times, fs,
                                                     is_artifact_trial, epoch_start_time=3, epoch_end_time=7)
-plot_confusion_matrix(actual_classes, predicted_classes, class_names=classes)
+plot_confusion_matrix(actual_classes, predicted_classes, class_names=classes, subject=subject_label)
