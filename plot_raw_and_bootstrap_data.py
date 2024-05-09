@@ -7,7 +7,6 @@ file: plot_raw_and_bootstrap_data.py
 BME 6710 - Dr. Jangraw
 Project 3: Public Dataset Wrangling
 """
-# Plot the raw data
 # Imports
 import numpy as np
 from matplotlib import pyplot as plt
@@ -16,25 +15,18 @@ from statsmodels.stats.multitest import fdrcorrection
 
 def plot_raw_data(raw_data, fs, subject_label, class_label, class_labels):
     """
-        Plot EEG data for a specific subject and class label.
-        
-        This function filters EEG data to only include trials of a specified class and plots this subset. Each trial
-        is plotted as a separate line on the graph to allow visualization of differences across trials within the
-        same class. The graph is saved as a PNG file.
-        
-        Parameters: - raw_data <np.array>[TRIALS, DATA_POINTS]: 2D array where each row represents a trial and
-        columns represent data points within that trial. - fs <float>: Sampling frequency of the EEG data,
-        used to convert data points to time in seconds. - subject_label <str>: Identifier for the subject,
-        used in the title of the plot and to name the output file. - class_label <int>: Numeric label of the class to
-        be plotted. Used to filter the trials in the `raw_data`. - class_labels <np.array>[TRIALS]: 1D array with the
-        class labels for each trial in `raw_data`, used to identify trials of the specified class.
-        
-        Effects: - Generates and saves a plot of EEG data filtered for a specific class, indicating differences
-        across trials. The plot includes a grid and labels for axes. The figure is saved with a filename indicating
-        the subject and class.
-        
-        Returns:
-            - None
+    Plot EEG data for a specific subject and class label.
+
+    This function filters EEG data to only include trials of a specified class and plots this subset. Each trial
+    is plotted as a separate line on the graph to allow visualization of differences across trials within the
+    same class. The graph is saved as a PNG file.
+
+    Parameters:
+        - raw_data <np.array>[TRIALS, DATA_POINTS]: 2D array where each row represents a trial and columns represent data points within that trial.
+        - fs <float>: Sampling frequency of the EEG data, used to convert data points to time in seconds.
+        - subject_label <str>: Identifier for the subject, used in the title of the plot and to name the output file.
+        - class_label <int>: Numeric label of the class to be plotted. Used to filter the trials in the `raw_data`.
+        - class_labels <np.array>[TRIALS]: 1D array with the class labels for each trial in `raw_data`, used to identify trials of the specified class.
     """
 
     # Filter data to include only the trials for the selected class
@@ -166,6 +158,9 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
     This function plots event-related potentials (ERPs) for target and rest conditions with confidence intervals. It
     also marks significant differences based on corrected p-values.
 
+    Generates a plot with ERPs, confidence intervals, and significance markers, displayed with appropriate
+    labels and legends.
+
     Parameters:
         - target_erp <np.array>: The average ERP for the target condition.
         - rest_erp <np.array>: The average ERP for the rest condition.
@@ -177,12 +172,6 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
         - class_labels <np.array>: Array containing the class labels of the data.
         - class_label <int>: Optional input with which class will be evaluated. The default is None.
         - channels <list>: Optional input for the electrodes the user wishes to evaluate. The default is None.
-
-    Effects: - Generates a plot with ERPs, confidence intervals, and significance markers, displayed with appropriate
-    labels and legends.
-
-    Returns:
-        - None
     """
 
     # Update to evaluate one class label
@@ -233,3 +222,60 @@ def plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times,
 
     # Save the figure
     plt.savefig(f'Subject_{subject_label}_CI_Plot.png')
+
+
+def plot_erp_by_class(raw_data, separated_trigger_times, class_labels, subject_label, epoch_duration=1750):
+    """
+    Plots Event-Related Potentials (ERPs) for different classes and analyzes statistical
+    differences between them.
+
+    Parameters:
+    - raw_data <np.ndarray>: The raw EEG data array.
+    - separated_trigger_times <list of lists>: A list where each sublist contains the trigger times
+      for a specific class.
+    - class_labels <list of str>: Names of the classes corresponding to each sublist in `separated_trigger_times`.
+    - subject_label <str>: Identifier for the subject being analyzed.
+    - epoch_duration <int, optional>: Duration of each epoch in milliseconds. Defaults to 1750.
+    """
+
+    # Get epochs by class
+    class_epochs = []
+    for class_start_times in separated_trigger_times:
+        class_epochs.append(extract_epochs(raw_data, class_start_times, epoch_duration))
+
+    # Get ERPs by class
+    class_erps = []
+    for class_epoch in class_epochs:
+        class_erps.append(np.mean(class_epoch, axis=(0, 2)))
+    erp_times_classes = np.linspace(0, epoch_duration, num=int(epoch_duration))
+
+    # P-values between classes
+    p_values_classes = []
+    for class_to_compare_index1 in range(4):  # Only use 4 classes, 5th is test data
+        for class_to_compare_index2 in range(4):  # Only use 4 classes, 5th is test data
+            # Calculate p-value between different classes (only do one time each)
+            if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
+                p_values_classes.append(
+                    bootstrap_p_values(class_epochs[class_to_compare_index1], class_epochs[class_to_compare_index2]))
+
+    # Corrected p-values between classes
+    corrected_p_values_classes = []
+    for p_value in p_values_classes:
+        _, corrected_p_values = fdr_correction(p_value, alpha=0.05)
+        corrected_p_values_classes.append(corrected_p_values)
+
+    # Plot the classes
+    # NOTE: As function is written, comparison 1 is "target" and comparison 2 is "rest"
+    comparison_number = 0
+    for class_to_compare_index1 in range(4):  # Only use 4 classes, 5th is test data
+        for class_to_compare_index2 in range(4):  # Only use 4 classes, 5th is test data
+            if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
+                plot_confidence_intervals_with_significance(class_erps[class_to_compare_index1],
+                                                            class_erps[class_to_compare_index2], erp_times_classes,
+                                                            class_epochs[class_to_compare_index1],
+                                                            class_epochs[class_to_compare_index2],
+                                                            corrected_p_values_classes[comparison_number],
+                                                            subject_label,
+                                                            class_labels)
+
+                comparison_number += 1

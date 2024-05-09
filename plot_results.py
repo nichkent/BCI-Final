@@ -141,6 +141,44 @@ def average_around_electrodes(eeg_data, fs, central_electrodes, surrounding_map)
     plt.show()
 
 
+def test_predictions(raw_data, fs, trigger_times, class_labels, channel, frequency, current_class, epoch_start_time=3, epoch_end_time=7):
+    """
+    Analyzes and prints the power spectrum values at a specific frequency and channel
+    for epochs corresponding to a specified class in EEG data.
+
+    Parameters:
+    - raw_data (np.ndarray): Array containing raw EEG data.
+    - fs (int): Sampling frequency of the EEG data in Hz.
+    - trigger_times (list): Times at which the EEG events/triggers of interest occur.
+    - class_labels (np.ndarray): Array of class labels for each EEG event/trigger.
+    - channel (int): The index of the EEG channel to analyze.
+    - frequency (float): The target frequency in Hz to analyze within the EEG data.
+    - current_class (int): The class label of the epochs to analyze.
+    - epoch_start_time (int): start time of the epoch
+    - epoch_end_time (int): end time of the epoch
+    """
+
+    # Epoch the data
+    eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=epoch_start_time, epoch_end_time=epoch_end_time)
+
+    # Filter epochs for the current class
+    class1_indices = np.where(class_labels == current_class)[0]
+    class1_epoch = eeg_epochs_motor_imagery[class1_indices]
+
+    powers = []
+    # Calculate power values at the specified frequency and channel for each epoch
+    for epoch in class1_epoch:
+        eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(epoch, fs)
+        spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
+        frequency_value = spectrum[channel, np.where(fft_frequencies == frequency)[0][0]]
+        powers.append(frequency_value)
+
+    # Output the metrics for the power values at the specified channel and frequency
+    print("max: ", np.max(powers))
+    print("min: ", np.min(powers))
+    print("mean: ", np.mean(powers))
+
+
 def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surrounding_map, trials, time,
                                       show_overall_average=False):
     """

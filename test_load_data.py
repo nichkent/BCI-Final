@@ -13,13 +13,13 @@ import matplotlib.pyplot as plt
 import numpy as np
 from load_data import load_eeg_data
 from plot_raw_and_bootstrap_data import plot_raw_data, bootstrap_p_values, extract_epochs, fdr_correction, \
-    plot_confidence_intervals_with_significance
+    plot_confidence_intervals_with_significance, plot_erp_by_class
 from plot_epoch_data import epoch_data
 from clean_data import remove_nan_values, separate_test_and_train_data, separate_artifact_trials, \
     separate_trigger_times_by_class, make_finite_filter, filter_data, get_envelope
 from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra_epoched, plot_power_spectrum, \
     get_power_spectra_single, get_frequency_spectrum_single, plot_power_spectrum_single
-from plot_results import average_around_electrodes_epoched, get_predictions, plot_confusion_matrix
+from plot_results import average_around_electrodes_epoched, get_predictions, plot_confusion_matrix, test_predictions
 
 #%% Load the data
 
@@ -44,9 +44,7 @@ plot_raw_data(raw_data, fs, subject_label, class_labels, class_label)
 # Separate test and train data
 
 # Separate train and test start times
-test_trigger_times, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels,
-                                                                                              trigger_times)
-
+test_trigger_times, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
 # Separate start time by class
 separated_trigger_times = separate_trigger_times_by_class(class_labels, trigger_times)
 
@@ -66,17 +64,16 @@ envelope = get_envelope(filtered_data)
 eeg_epochs = epoch_data(fs, trigger_times, raw_data)
 
 # Epoch filtered data
+# Filtering changed shape of data, so use transpose for shape (samples, channels)
 filtered_data_epochs = epoch_data(fs, trigger_times, filtered_data.T, epoch_start_time=2,
-                                  epoch_end_time=7)  # Filtering changed shape of data, so use transpose for shape (
-# samples, channels)
+                                  epoch_end_time=7)
 
 # Epoch the envelope
+# Filtering changed shape of envelope from raw data, so use transpose for shape (samples, channels)
 envelope_epochs = epoch_data(fs, trigger_times, envelope.T, epoch_start_time=2,
-                             epoch_end_time=7)  # Filtering changed shape of envelope from raw data, so use transpose
-# for shape (samples, channels)
+                             epoch_end_time=7)
 
 # Separate clean and artifact epochs
-
 clean_epochs, artifact_epochs, clean_class_labels = separate_artifact_trials(envelope_epochs, is_artifact_trial,
                                                                              class_labels)
 
@@ -143,48 +140,7 @@ plot_confidence_intervals_with_significance(target_erp, rest_erp, erp_times, tar
                                             channels=[0, 1, 2, 3])
 
 # %% Plot by class (fifth class contains test data)
-epoch_duration = 1750
-
-# Get epochs by class
-class_epochs = []
-for class_start_times in separated_trigger_times:
-    class_epochs.append(extract_epochs(raw_data, class_start_times, epoch_duration))
-
-# Get ERPs by class
-class_erps = []
-for class_epoch in class_epochs:
-    class_erps.append(np.mean(class_epoch, axis=(0, 2)))
-erp_times_classes = np.linspace(0, epoch_duration, num=int(epoch_duration))
-
-# P-values between classes
-p_values_classes = []
-for class_to_compare_index1 in range(4):  # Only use 4 classes, 5th is test data
-    for class_to_compare_index2 in range(4):  # Only use 4 classes, 5th is test data
-        # Calculate p-value between different classes (only do one time each)
-        if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
-            p_values_classes.append(
-                bootstrap_p_values(class_epochs[class_to_compare_index1], class_epochs[class_to_compare_index2]))
-
-# Corrected p-values between classes
-corrected_p_values_classes = []
-for p_value in p_values_classes:
-    _, corrected_p_values = fdr_correction(p_value, alpha=0.05)
-    corrected_p_values_classes.append(corrected_p_values)
-
-# Plot the classes
-# NOTE: As function is written, comparison 1 is "target" and comparison 2 is "rest"
-comparison_number = 0
-for class_to_compare_index1 in range(4):  # Only use 4 classes, 5th is test data
-    for class_to_compare_index2 in range(4):  # Only use 4 classes, 5th is test data
-        if class_to_compare_index1 != class_to_compare_index2 and class_to_compare_index1 < class_to_compare_index2:
-            plot_confidence_intervals_with_significance(class_erps[class_to_compare_index1],
-                                                        class_erps[class_to_compare_index2], erp_times_classes,
-                                                        class_epochs[class_to_compare_index1],
-                                                        class_epochs[class_to_compare_index2],
-                                                        corrected_p_values_classes[comparison_number], subject_label,
-                                                        class_labels)
-
-            comparison_number += 1
+plot_erp_by_class(raw_data, separated_trigger_times, class_labels, subject_label)
 
 #%% Compare frequency data across time in epochs
 eeg_epochs_rest = epoch_data(fs, trigger_times, raw_data, epoch_start_time=0, epoch_end_time=2)
@@ -203,39 +159,25 @@ plot_power_spectrum(eeg_epochs_motor_imagery, fft_frequencies_motor_imagery, spe
                     subject=subject_label)
 plt.show()
 
-#%% For one epoch
+#%% Plot power spectrum for one epoch
 eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
 
+# pick index of epoch
 index_epoch = 82
 current_epoch = eeg_epochs_motor_imagery[index_epoch]
 
+# Calculate frequency spectrum and power spectra
 eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(current_epoch, fs)
 spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
 
+# Get name of current class
 class_label_current = classes[int(class_labels[index_epoch]) - 1]
 
+# Plot it
 plot_power_spectrum_single(fft_frequencies, spectrum, class_label_current, [28], subject=subject_label, epoch_index=index_epoch)
 
-#%% Testing predictions with plot
-eeg_epochs_motor_imagery = epoch_data(fs, trigger_times, raw_data, epoch_start_time=3, epoch_end_time=7)
-
-channel = 28
-frequency = 12.5
-current_class = 4
-
-class1_indices = np.where(class_labels == current_class)[0]
-class1_epoch = eeg_epochs_motor_imagery[class1_indices]
-
-powers = []
-for epoch in class1_epoch:
-    eeg_epoch_fft, fft_frequencies = get_frequency_spectrum_single(epoch, fs)
-    spectrum = get_power_spectra_single(eeg_epoch_fft, fft_frequencies)
-    frequency_value = spectrum[channel, np.where(fft_frequencies == frequency)[0][0]]
-    powers.append(frequency_value)
-
-# print("max: ", np.max(powers))
-# print("min: ", np.min(powers))
-# print("mean: ", np.mean(powers))
+#%% Testing predictions with plots
+test_predictions(raw_data, fs, trigger_times, class_labels, channel=28, frequency=12.5, current_class=4, epoch_start_time=3, epoch_end_time=7)
 
 #%% predictions
 _, train_trigger_times, training_class_labels = separate_test_and_train_data(class_labels, trigger_times)
