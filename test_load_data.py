@@ -24,7 +24,7 @@ from plot_results import average_around_electrodes_epoched, get_predictions, plo
 #%% Load the data
 
 # Possible subject labels: 'l1b', 'k6b', or 'k3b'
-subject_label = 'k3b'
+subject_label = 'l1b'
 
 data_dictionary = load_eeg_data(subject=subject_label)
 
