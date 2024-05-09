@@ -173,7 +173,7 @@ def average_around_electrodes_epoched(eeg_epochs, central_electrodes, surroundin
             # plot for each trial
             averaged_signal = np.mean(eeg_epochs[trial, :, surrounding_indices], axis=0)
             all_averages.append(averaged_signal)
-            ax = axes[trial_index, electrode_index]
+            ax = axes[electrode_index, trial_index]
             ax.plot(time, averaged_signal)
             ax.set_title(f"Trial {trial + 1}, Electrode {electrode}")
             ax.set_xlabel('Time')
