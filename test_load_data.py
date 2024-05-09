@@ -19,13 +19,12 @@ from clean_data import remove_nan_values, separate_test_and_train_data, separate
     separate_trigger_times_by_class, make_finite_filter, filter_data, get_envelope
 from frequency_spectrum_data import get_frequency_spectrum, get_power_spectra_epoched, plot_power_spectrum, \
     get_power_spectra_single, get_frequency_spectrum_single, plot_power_spectrum_single
-from plot_results import average_around_electrodes_epoched
-from predict_classes import get_predictions, plot_confusion_matrix
+from plot_results import average_around_electrodes_epoched, get_predictions, plot_confusion_matrix
 
 #%% Load the data
 
 # Possible subject labels: 'l1b', 'k6b', or 'k3b'
-subject_label = 'k6b'
+subject_label = 'l1b'
 
 data_dictionary = load_eeg_data(subject=subject_label)
 
