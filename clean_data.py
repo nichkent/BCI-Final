@@ -1,53 +1,40 @@
 """
-Created on Sun Apr 28 10:39:23 2024
+This file includes a variety of functions to remove, clean, and/or organize the data. The functions in this file serve to separate test and train data (epochs), artifact and "clean" epochs, NaN data, and offers filtering capabilities.
 
 @author: Claire Leahy
 
+file: clean_data.py
+BME 6710 - Dr. Jangraw
+Project 3: Public Dataset Wrangling
 Sources: - Motor Imagery Tasks Based Electroencephalogram Signals Classification Using Data-Driven Features:
-https://www.sciencedirect.com/science/article/pii/S2772528623000134 """
+https://www.sciencedirect.com/science/article/pii/S2772528623000134 
 
-# Import packages
+Useful abbreviations:
+    - EEG: Electroencephalograph
+    - MI: Motor imagery
+    - fs: Sampling frequency
+"""
+
+#%% Import packages
 import numpy as np
 from scipy.signal import firwin, filtfilt, hilbert
 
-# Considerations
 
-"""
-Motor Imagery Tasks (source)
-Consider removing signals outside of 8-30Hz (SMR)
-µ (SMR) frequencies: 8-13Hz, sensorimotor cortex
-β frequencies: 12-30Hz, motor control, thinking
-    If frequency spectrum prominent, indicate non-rest state?
-"""
-
-"""
-Filtering frequencies will help potentially eliminate noise and ideally clarify relevant EEG signals
-Bandpass frequencies can be changed to achieve greatest accuracies
-Would it make the most sense to filter then epoch or epoch then filter?
-How necessary is the envelope?
-"""
-
-"""Trials (epochs) where data_dictionary['Artifact Trials'] is 1 indicate an artifact has been identified MUCH less 
-specific process than removing components Should ICA be performed on those trials (basically assuming 
-electrodes=components) and then remove electrode source from that epoch? 60 channels present. Observing raw data at 
-pertinent channels may help identify necessity of removing artifact (artifact may have minimal contribution to 
-relevant channels) Is best way of approaching artifact removal looking at accuracy with and without artifact trials? 
-Don't have a mixing matrix """
-
-
-# Remove NaN values from raw data
+#%% Remove NaN values from raw data
 
 def remove_nan_values(raw_data):
     """
-    Description ----------- Function that replaces NaN values in the raw data (points of breaks or data saturation)
-    with the median EEG value for that channel.
+    Description 
+    ----------- 
+    Function that replaces NaN values in the raw data (points of breaks or data saturation) with the median EEG value for that channel.
 
     Parameters
     ----------
     - raw_data <np.array of float>: The EEG data in µV. The size of this array is (samples, channels).
 
-    Returns ------- - raw_data_replaced : <np.array of float>: The updated EEG data with NaN values removed in µV.
-    The size of this array is (samples, channels).
+    Returns 
+    -------
+    - raw_data_replaced : <np.array of float>: The updated EEG data with NaN values removed in µV. The size of this array is (sample_count, channel_count).
 
     """
 
@@ -78,7 +65,7 @@ def remove_nan_values(raw_data):
     return raw_data_replaced
 
 
-# Remove test set trials
+#%% Remove test set trials
 
 def separate_test_and_train_data(class_labels, trigger_times):
     """
@@ -86,18 +73,16 @@ def separate_test_and_train_data(class_labels, trigger_times):
     -----------
     This function separates data into training or testing data based on the presence of a class label.
 
-    Parameters ---------- - class_labels <np.array of float>: Array containing the class label associated with an
-    epoch, values 1-4 or NaN. The shape is (epochs,). - trigger_times <np.array of int>: Array containing the sample
-    index at which and epoch begins. The shape is (epochs,).
+    Parameters
+    ----------
+    - class_labels <np.array of float>: Array containing the class label associated with an epoch, values 1-4 or NaN. The shape is (epoch_count,). 
+    - trigger_times <np.array of int>: Array containing the sample index at which an epoch begins. The shape is (epoch_count,).
 
     Returns
     -------
-    - test_trigger_times : TYPE
-        DESCRIPTION.
-    - train_trigger_times : TYPE
-        DESCRIPTION.
-    - training_class_labels : TYPE
-        DESCRIPTION.
+    - test_trigger_times <np.array of int>: Array containing the epoch start times for the testing data trials. The shape is (epoch_count,).
+    - train_trigger_times <np.array of int>: Array containing the epoch start times for the training data trials. The shape is (epoch_count,).
+    - training_class_labels <np.array of float>: Array containing the MI class labels corresponding to the training epochs.
 
     """
 
@@ -114,7 +99,7 @@ def separate_test_and_train_data(class_labels, trigger_times):
     return test_trigger_times, train_trigger_times, training_class_labels
 
 
-# Separate clean epochs from epochs with artifacts
+#%% Separate clean epochs from epochs with artifacts
 
 def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
     """
@@ -123,21 +108,15 @@ def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
 
     Parameters
     ----------
-    epoched_data : TYPE
-        DESCRIPTION.
-    is_artifact_trial : TYPE
-        DESCRIPTION.
-    class_labels : TYPE
-        DESCRIPTION.
+    - epoched_data <np.array of float>: The EEG data organized by epoch. The shape is (epoch_count, sample_count, channel_count).
+    - is_artifact_trial <np.array of bool>: Array containing truth data for whether an epoch contains an artifact as identified by the dataset description. The value is 1 (True) if the trial does contain an artifact. The shape is (epoch_count,).
+    - class_labels <np.array of float>: Array containing the class label associated with an epoch, values 1-4 or NaN. The shape is (epoch_count,). 
 
     Returns
     -------
-    clean_epochs : TYPE
-        DESCRIPTION.
-    artifact_epochs : TYPE
-        DESCRIPTION.
-    clean_class_labels : TYPE
-        DESCRIPTION.
+    - clean_epochs <np.array of float>: The epoched EEG data containing only trials without identified artifacts. The shape is (epoch_count, sample_count, channel_count).
+    - artifact_epochs <np.array of float>: The epoched EEG data containing only trials with identified artifacts. The shape is (epoch_count, sample_count, channel_count).
+    - clean_class_labels <np.array of int>: The class labels as they correspond to the epochs without identified artifacts. The shape is (epoch_count,).
 
     """
 
@@ -174,24 +153,22 @@ def separate_artifact_trials(epoched_data, is_artifact_trial, class_labels):
     return clean_epochs, artifact_epochs, clean_class_labels
 
 
-# Separate start times by class
+#%% Separate start times by class
 
 def separate_trigger_times_by_class(class_labels, trigger_times):
     """
     Description
     -----------
+    Function to organize the trigger times of the epochs based on class.
 
     Parameters
     ----------
-    class_labels : TYPE
-        DESCRIPTION.
-    trigger_times : TYPE
-        DESCRIPTION.
+    - class_labels <np.array of float>: Array containing the class label associated with an epoch, values 1-4 or NaN. The shape is (epoch_count,). 
+    - trigger_times <np.array of int>: Array containing the sample index at which an epoch begins. The shape is (epoch_count,).
 
     Returns
     -------
-    separated_trigger_times : TYPE
-        DESCRIPTION.
+    - separated_trigger_times <list>: List containing the trigger times that correspond to each MI class. The size is 5 (number of classes), and each element contains an array of size (epoch_count,).
 
     """
 
@@ -214,35 +191,25 @@ def separate_trigger_times_by_class(class_labels, trigger_times):
     return separated_trigger_times
 
 
-# Make filter
-
-"""
-Is bandpass the best type of filter for this case?
-Could make more general, decide on finite or infinite. Select parameters from there
-"""
-
+#%% Make filter
 
 def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order=10, fs=250):
     """
-    
+    Description
+    -----------
+    Function that generates a finite impulse response filter that may be applied to the EEG data.
 
     Parameters
     ----------
-    low_cutoff : TYPE
-        DESCRIPTION.
-    high_cutoff : TYPE
-        DESCRIPTION.
-    filter_type : TYPE, optional
-        DESCRIPTION. The default is 'hann'.
-    filter_order : TYPE, optional
-        DESCRIPTION. The default is 10.
-    fs : TYPE, optional
-        DESCRIPTION. The default is 250.
+    - low_cutoff <float>: The lower frequency to be used in the bandpass filter in Hz.
+    - high_cutoff <float>: The higher frequency to be used in the bandpass filter in Hz.
+    - filter_type <str, optional>: The finite impulse response filter of choice to use in the firwin() function. The default is "hann".
+    - filter_order <int, optional>: The order of the filter. The default is 10.
+    - fs :<int, optional> The sampling frequency in Hz. The default is 250.
 
     Returns
     -------
-    filter_coefficients : TYPE
-        DESCRIPTION.
+    - filter_coefficients <np.array of float>: Numerator coefficients of the finite impulse response filter, shape (filter_order+1,).
 
     """
 
@@ -256,23 +223,20 @@ def make_finite_filter(low_cutoff, high_cutoff, filter_type='hann', filter_order
     return filter_coefficients
 
 
-# Filter data
+#%% Filter data
 
 def filter_data(data, b):
     """
-    
+    Function that applies a finite impulse response filter to the EEG data of interest.
 
     Parameters
     ----------
-    data : TYPE
-        DESCRIPTION.
-    b : TYPE
-        DESCRIPTION.
+    - data <np.array of float>: The data to be filtered. The shape is (sample_count, channel_count)
+    - b <np.array of float>: Numerator coefficients of the finite impulse response filter, shape (filter_order+1,).
 
     Returns
     -------
-    filtered_data : TYPE
-        DESCRIPTION.
+    - filtered_data <np.array of float>: The EEG data after the filter has been applied. The shape is (sample_count, channel_count).
 
     """
 
@@ -285,28 +249,26 @@ def filter_data(data, b):
 
     # Apply filter to EEG data for each channel
     for channel_index in range(channel_count):
-        filtered_data[channel_index, :] = filtfilt(b=b, a=1, x=data.T[channel_index,
-                                                               :])  # Transpose of data is shape (channel_count,
-        # sample_count)
+        filtered_data[channel_index, :] = filtfilt(b=b, a=1, x=data.T[channel_index,:]) # Transpose of data is shape (channel_count, sample_count)
 
     return filtered_data
 
 
-# Generate the envelope of filtered data
+#%% Generate the envelope of filtered data
 
 def get_envelope(filtered_data):
     """
-    
+    Description
+    -----------
+    Function that calculates the envelope (magnitude) of the filtered EEG data.
 
     Parameters
     ----------
-    filtered_data : TYPE
-        DESCRIPTION.
+    - filtered_data <np.array of float>: The EEG data after the filter has been applied. The shape is (sample_count, channel_count).
 
     Returns
     -------
-    envelope : TYPE
-        DESCRIPTION.
+    - envelope <np.array of float>: The magnitude (envelope) of the filtered EEG data. The shape is (sample_count, channel_count).
 
     """
 
